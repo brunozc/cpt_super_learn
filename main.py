@@ -32,14 +32,17 @@ def _get_reward(current_position, known_positions, data, episode, state, cost_cp
 
     # read cpts at the known positions
     cpt = []
+    depth = []
     cpt_position = []
     for k in known_positions:
         idx = np.where(data[:, 0] == k)[0]
+        depth.append(data[idx, 1])
         cpt.append(data[idx, 2])
         cpt_position.append(k)
 
     # read cpt at current position
     idx = np.where(data[:, 0] == current_position)[0]
+    depth.append(data[idx, 1])
     cpt.append(data[idx, 2])
     cpt_position.append(current_position)
 
@@ -51,7 +54,16 @@ def _get_reward(current_position, known_positions, data, episode, state, cost_cp
     idw.interpolate(cpt_position, cpt)
     idw.predict(unique_x)
 
-    # show plot
+    # compare at the entire field RMSE
+    RMSE = np.sqrt(np.mean((data[:, 2] - idw.prediction.T.ravel()) ** 2))
+
+    # cost of cpts
+    reward = len(known_positions) * cost_cpt
+
+    # cost of the RMSE
+    reward += -1 * RMSE
+
+    # plot
     import matplotlib.pylab as plt
     import matplotlib as mpl
     if not os.path.isdir(os.path.join("./results", f"episode_{episode}")):
@@ -59,33 +71,31 @@ def _get_reward(current_position, known_positions, data, episode, state, cost_cp
 
     vmin = 5
     vmax = 30
-    fig, ax = plt.subplots(2, 1)
-    ax[0].set_position([0.1, 0.1, 0.7, 0.35])
-    ax[1].set_position([0.1, 0.5, 0.7, 0.35])
-    ax[0].scatter(data[:, 0], data[:, 1], c=data[:, 2], vmin=vmin, vmax=vmax)
-    ax[1].scatter(data[:, 0], data[:, 1], c=idw.prediction.T.ravel(), vmin=vmin, vmax=vmax)
+    fig, ax = plt.subplots(3, 1, sharex=True, sharey=True)
+    ax[0].set_position([0.1, 0.70, 0.75, 0.25])
+    ax[1].set_position([0.1, 0.40, 0.75, 0.25])
+    ax[2].set_position([0.1, 0.10, 0.75, 0.25])
+    for i, x in enumerate(cpt_position):
+        ax[0].scatter(np.ones(len(depth[i])) * x, depth[i], c=cpt[i], vmin=vmin, vmax=vmax, marker="s", s=15)
+    ax[1].scatter(data[:, 0], data[:, 1], c=data[:, 2], vmin=vmin, vmax=vmax, marker="s", s=35)
+    ax[2].scatter(data[:, 0], data[:, 1], c=idw.prediction.T.ravel(), vmin=vmin, vmax=vmax, marker="s", s=35)
     ax[0].grid()
     ax[1].grid()
-    ax[0].set_xlabel("Position")
-    ax[0].set_ylabel("Depth")
-    ax[1].set_ylabel("Depth")
+    ax[2].grid()
+    ax[2].set_xlabel("Position")
+    ax[0].set_ylabel("True")
+    ax[1].set_ylabel("Interpolation")
+    ax[2].set_ylabel("Known")
+    ax[0].set_xlim([0, nb_points-1])
+    # add RMSE
+    ax[0].text(0, 8, f'Episode {episode}, state {state}, RMSE={round(RMSE, 3)}', horizontalalignment='left', verticalalignment='center')
     # Add a colorbar to a plot
-    cax = ax[0].inset_axes([1.015, 0., 0.05, 2.15])
+    cax = ax[0].inset_axes([1.05, -2., 0.05, 2.5])
     norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
     cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap="viridis"), ax=ax, cax=cax)
     cbar.set_label("Values")
     plt.savefig(os.path.join(os.path.join("./results", f"episode_{episode}", f"state_{state}.png")))
     plt.close()
-
-    # compare at the entire field RMSE
-    RMSE = np.sqrt(np.mean((data[:, 2] - idw.prediction.T.ravel()) ** 2))
-
-
-    # cost of cpts
-    reward = len(known_positions) * cost_cpt
-
-    # cost of the RMSE
-    reward += -1 * RMSE
 
     return reward
 
