@@ -25,6 +25,9 @@ def _get_reward(current_position, known_positions, data, episode, state, cost_cp
 
     # unique coordinates CPT
     unique_x = np.unique(data[:, 0])
+    unique_x.sort()
+    unique_y = np.unique(data[:, 1])
+    unique_y.sort()
 
     # check if len(unique_x) == nb_points
     if len(unique_x) != nb_points:
@@ -51,11 +54,25 @@ def _get_reward(current_position, known_positions, data, episode, state, cost_cp
         return -10
 
     idw = InverseDistance()
-    idw.interpolate(cpt_position, cpt)
+    cpt_position, idx = np.unique(cpt_position, return_index=True)
+    idw.interpolate(cpt_position, np.array(cpt)[idx])
     idw.predict(unique_x)
 
+    # import matplotlib.pylab as plt
+    # for i in range(len(cpt)):
+    #     plt.plot(cpt[i], label="cpt")
+    #     plt.plot(idw.prediction.T[:, i], label="cpt")
+    #     plt.show()
+
+    # reshape data
+    new_data = []
+    for i in unique_x:
+        idx = np.where(data[:, 0] == i)[0]
+        new_data.append(data[idx, 2])
+    new_data = np.array(new_data)
+
     # compare at the entire field RMSE
-    RMSE = np.sqrt(np.mean((data[:, 2] - idw.prediction.T.ravel()) ** 2))
+    RMSE = np.sqrt(np.mean((new_data - idw.prediction) ** 2))
 
     # cost of cpts
     reward = len(known_positions) * cost_cpt
@@ -76,16 +93,19 @@ def _get_reward(current_position, known_positions, data, episode, state, cost_cp
     ax[1].set_position([0.1, 0.40, 0.75, 0.25])
     ax[2].set_position([0.1, 0.10, 0.75, 0.25])
     for i, x in enumerate(cpt_position):
-        ax[0].scatter(np.ones(len(depth[i])) * x, depth[i], c=cpt[i], vmin=vmin, vmax=vmax, marker="s", s=15)
-    ax[1].scatter(data[:, 0], data[:, 1], c=data[:, 2], vmin=vmin, vmax=vmax, marker="s", s=35)
-    ax[2].scatter(data[:, 0], data[:, 1], c=idw.prediction.T.ravel(), vmin=vmin, vmax=vmax, marker="s", s=35)
+        ax[0].scatter(np.ones(len(depth[i])) * x, depth[i], c=cpt[i],
+                      vmin=vmin, vmax=vmax, marker="s", s=15,  cmap="viridis")
+
+    x, y = np.meshgrid(unique_x, unique_y, indexing="ij")
+    ax[1].scatter(x, y, c=idw.prediction, vmin=vmin, vmax=vmax, marker="s", s=30,  cmap="viridis")
+    ax[2].scatter(x, y, c=new_data, vmin=vmin, vmax=vmax, marker="s", s=30,  cmap="viridis")
     ax[0].grid()
     ax[1].grid()
     ax[2].grid()
     ax[2].set_xlabel("Position")
-    ax[0].set_ylabel("True")
+    ax[0].set_ylabel("Known")
     ax[1].set_ylabel("Interpolation")
-    ax[2].set_ylabel("Known")
+    ax[2].set_ylabel("True")
     ax[0].set_xlim([0, nb_points-1])
     # add RMSE
     ax[0].text(0, 8, f'Episode {episode}, state {state}, RMSE={round(RMSE, 3)}', horizontalalignment='left', verticalalignment='center')
@@ -98,7 +118,6 @@ def _get_reward(current_position, known_positions, data, episode, state, cost_cp
     plt.close()
 
     return reward
-
 
 
 def _is_terminal_state(current_position):

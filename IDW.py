@@ -12,6 +12,9 @@ class InverseDistance:
         self.tol = 1e-9
         self.var = None
         self.prediction = []
+        self.tree = []
+        self.training_points = []
+        self.training_data = []
 
     def interpolate(self, training_points, training_data):
         """
@@ -29,8 +32,6 @@ class InverseDistance:
         # compute Euclidean distance from grid to training
         self.tree = cKDTree(self.training_points.reshape(-1, 1))
 
-        return
-
     def predict(self, prediction_points):
         """
         Perform interpolation with inverse distance method
@@ -44,15 +45,13 @@ class InverseDistance:
         # get distances and indexes of the closest nb_points
         dist, idx = self.tree.query(prediction_points.reshape(-1, 1), self.nb_near_points)
         dist += self.tol  # to overcome division by zero
-        self.zn = []
+        zn = []
 
         # create interpolation for every point
         for i in range(len(prediction_points)):
             # compute weights
             data = self.training_data[idx[i]]
             # interpolate
-            self.zn.append(
-                np.sum((data.T / dist[i] ** self.power) / np.sum(1.0 / dist[i] ** self.power), axis=1)
-            )
+            zn.append(np.sum((data.T / dist[i] ** self.power) / np.sum(1.0 / dist[i] ** self.power), axis=1))
 
-        self.prediction = np.array(self.zn)
+        self.prediction = np.array(zn)
