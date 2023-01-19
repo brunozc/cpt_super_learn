@@ -1,6 +1,6 @@
 import os
 import re
-import imageio
+import imageio.v3 as iio
 
 
 def atof(text):
@@ -22,9 +22,9 @@ def create_gif(image_list, gif_name):
     # create the frames
     frames = []
     for image_name in image_list:
-        frames.append(imageio.imread(image_name))
+        frames.append(iio.imread(image_name))
     # save them as frames into a gif
-    imageio.mimsave(gif_name, frames, 'GIF', fps = 10)
+    iio.imwrite(gif_name, frames, fps=60)
 
 
 def main(folder, output_gif):
@@ -40,4 +40,4 @@ def main(folder, output_gif):
 
 
 if __name__ == "__main__":
-    main("./results", "results.gif")
+    main("./results", "results.mp4")

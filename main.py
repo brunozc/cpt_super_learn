@@ -1,23 +1,110 @@
-# https://www.youtube.com/watch?v=iKdlKYG78j4
-# https://colab.research.google.com/drive/1E2RViy7xmor0mhqskZV14_NUj2jMpJz3#scrollTo=3N5BB0m0JHIn
-
 import os
 import numpy as np
-from IDW import InverseDistance
+import matplotlib.pylab as plt
+import matplotlib as mpl
 
+from IDW import InverseDistance
 
 # define environment
 ## states
 nb_points = 51
 ## actions
-actions = [1, 2, 5, 10]
+actions = [1, 2, 4, 6, 8, 10, 12, 14]
 q_values = np.zeros((nb_points, 1, len(actions)))
 ## rewards
 rewards = np.full((nb_points, 1), -1)
 
 
-def _get_reward(current_position, known_positions, data, episode, state, cost_cpt=-1):
+def make_plot(episode, state, cpt, depth, cpt_position, idw, new_data, RMSE,
+              nb_episodes, rmse_global, reward_global, unique_x, unique_y, output_folder):
+    r"""
+    Plot the results of the episode
+    """
+    # plot
+    if not os.path.isdir(os.path.join(output_folder, f"episode_{episode}")):
+        os.makedirs(os.path.join(output_folder, f"episode_{episode}"))
 
+    vmin = 5
+    vmax = 30
+    fig, ax = plt.subplots(3, 2, figsize=(10, 5))
+    ax[0, 0].set_position([0.075, 0.70, 0.35, 0.25])
+    ax[1, 0].set_position([0.075, 0.40, 0.35, 0.25])
+    ax[2, 0].set_position([0.075, 0.10, 0.35, 0.25])
+    ax[0, 1].set_position([0.60, 0.70, 0.35, 0.25])
+    ax[1, 1].set_position([0.60, 0.40, 0.35, 0.25])
+    ax[2, 1].set_position([0.60, 0.10, 0.35, 0.25])
+    for i, x in enumerate(cpt_position):
+        ax[0, 0].scatter(np.ones(len(depth[i])) * x, depth[i], c=cpt[i],
+                         vmin=vmin, vmax=vmax, marker="s", s=3,  cmap="viridis")
+
+    x, y = np.meshgrid(unique_x, unique_y, indexing="ij")
+    ax[1, 0].scatter(x, y, c=idw.prediction, vmin=vmin, vmax=vmax, marker="s", s=15,  cmap="viridis")
+    ax[2, 0].scatter(x, y, c=new_data, vmin=vmin, vmax=vmax, marker="s", s=15,  cmap="viridis")
+    ax[0, 0].grid()
+    ax[1, 0].grid()
+    ax[2, 0].grid()
+    ax[0, 0].xaxis.set_ticklabels([])
+    ax[1, 0].xaxis.set_ticklabels([])
+    ax[2, 0].set_xlabel("Position")
+    ax[0, 0].set_ylabel("Known")
+    ax[1, 0].set_ylabel("Interpolation")
+    ax[2, 0].set_ylabel("True")
+    ax[0, 0].set_xlim([0, nb_points-1])
+    ax[1, 0].set_xlim([0, nb_points-1])
+    ax[2, 0].set_xlim([0, nb_points-1])
+
+    ax[0, 1].set_axis_off()
+    ax[1, 1].grid()
+    ax[1, 1].plot(reward_global, color='b')
+    ax[1, 1].set_ylabel("Reward")
+    ax[1, 1].set_xlim((0, nb_episodes))
+    ax[1, 1].set_ylim((0, -100))
+    ax[1, 1].xaxis.set_ticklabels([])
+
+    ax[2, 1].plot(rmse_global, color='b')
+    ax[2, 1].set_ylabel("RMSE")
+    ax[2, 1].set_xlabel("Number of episodes")
+    ax[2, 1].grid()
+    ax[2, 1].set_xlim((0, nb_episodes))
+    ax[2, 1].set_ylim((0, 21))
+
+    # add RMSE
+    ax[0, 0].text(0, 8, f'Episode {episode}, state {state}, RMSE={round(RMSE, 3)}',
+                  horizontalalignment='left', verticalalignment='center')
+    # Add a colorbar to a plot
+    cax = ax[0, 0].inset_axes([1.05, -2., 0.05, 2.5])
+    norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
+    cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap="viridis"), ax=ax, cax=cax)
+    cbar.set_label("Values")
+    plt.savefig(os.path.join(os.path.join(output_folder, f"episode_{episode}", f"state_{state}.png")))
+    plt.close()
+
+
+def get_reward(current_position: int, known_positions: list, data: str,
+               episode: int, state: int, nb_episodes: int,
+               rmse_global: list, reward_global: list, cost_cpt: float = -1, cost_rmse: float = 5,
+               output_folder: str = "results", plots: bool = True):
+    r"""
+    Custom reward function
+    The interpolation is currently Inversed Distance Weighting (IDW)
+
+    Parameters
+    ----------
+    current_position (int): current position of the agent
+    known_positions (list): list of known positions
+    data (str): path to the data
+    episode (int): current episode
+    state (int): current state
+    nb_episodes (int): total number of episodes
+    rmse_global (list): list of RMSE for each episode
+    reward_global (list): list of rewards for each episode
+    cost_cpt (float): cost of a cpt
+    cost_rmse (float): cost of a rmse
+    output_folder (str): path to the output folder
+    plots (bool): if True, plots are generated
+    """
+
+    # read data
     with open(data, "r") as fi:
         data = fi.read().splitlines()
         data = [np.array(i.split(";")).astype(float) for i in data[1:]]
@@ -49,20 +136,16 @@ def _get_reward(current_position, known_positions, data, episode, state, cost_cp
     cpt.append(data[idx, 2])
     cpt_position.append(current_position)
 
-    # interpolate at the entire field
-    if len(cpt) < 2:
-        return -10
-
-    idw = InverseDistance()
+    # get unique cpt positions
     cpt_position, idx = np.unique(cpt_position, return_index=True)
+    # interpolate at the entire field
+    if len(cpt_position) < 2:
+        return -10, 10
+
+    # perform interpolation
+    idw = InverseDistance()
     idw.interpolate(cpt_position, np.array(cpt)[idx])
     idw.predict(unique_x)
-
-    # import matplotlib.pylab as plt
-    # for i in range(len(cpt)):
-    #     plt.plot(cpt[i], label="cpt")
-    #     plt.plot(idw.prediction.T[:, i], label="cpt")
-    #     plt.show()
 
     # reshape data
     new_data = []
@@ -78,110 +161,123 @@ def _get_reward(current_position, known_positions, data, episode, state, cost_cp
     reward = len(known_positions) * cost_cpt
 
     # cost of the RMSE
-    reward += -1 * RMSE
+    reward += -1 * RMSE * cost_rmse
 
-    # plot
-    import matplotlib.pylab as plt
-    import matplotlib as mpl
-    if not os.path.isdir(os.path.join("./results", f"episode_{episode}")):
-        os.makedirs(os.path.join("./results", f"episode_{episode}"))
-
-    vmin = 5
-    vmax = 30
-    fig, ax = plt.subplots(3, 1, sharex=True, sharey=True)
-    ax[0].set_position([0.1, 0.70, 0.75, 0.25])
-    ax[1].set_position([0.1, 0.40, 0.75, 0.25])
-    ax[2].set_position([0.1, 0.10, 0.75, 0.25])
-    for i, x in enumerate(cpt_position):
-        ax[0].scatter(np.ones(len(depth[i])) * x, depth[i], c=cpt[i],
-                      vmin=vmin, vmax=vmax, marker="s", s=15,  cmap="viridis")
-
-    x, y = np.meshgrid(unique_x, unique_y, indexing="ij")
-    ax[1].scatter(x, y, c=idw.prediction, vmin=vmin, vmax=vmax, marker="s", s=30,  cmap="viridis")
-    ax[2].scatter(x, y, c=new_data, vmin=vmin, vmax=vmax, marker="s", s=30,  cmap="viridis")
-    ax[0].grid()
-    ax[1].grid()
-    ax[2].grid()
-    ax[2].set_xlabel("Position")
-    ax[0].set_ylabel("Known")
-    ax[1].set_ylabel("Interpolation")
-    ax[2].set_ylabel("True")
-    ax[0].set_xlim([0, nb_points-1])
-    # add RMSE
-    ax[0].text(0, 8, f'Episode {episode}, state {state}, RMSE={round(RMSE, 3)}', horizontalalignment='left', verticalalignment='center')
-    # Add a colorbar to a plot
-    cax = ax[0].inset_axes([1.05, -2., 0.05, 2.5])
-    norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
-    cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap="viridis"), ax=ax, cax=cax)
-    cbar.set_label("Values")
-    plt.savefig(os.path.join(os.path.join("./results", f"episode_{episode}", f"state_{state}.png")))
-    plt.close()
-
-    return reward
+    # make plot
+    if plots:
+        make_plot(episode, state, cpt, depth, cpt_position, idw, new_data, RMSE,
+                  nb_episodes, rmse_global, reward_global, unique_x, unique_y, output_folder)
+    return reward, RMSE
 
 
-def _is_terminal_state(current_position):
+def is_terminal_state(current_position: int) -> bool:
+    r""""
+    Check if the current state is terminal
+
+    Parameters:
+    -----------
+    current_position (int): current position
+    """
     if current_position >= nb_points - 1:
         return True
     else:
         return False
 
-def _get_starting_position():
-    # return np.random.randint(0, nb_points-1)
+def get_starting_position() -> int:
+    r"""
+    Get the starting position
+
+    Always starts at 0
+    """
+    # return np.random.randint(0, nb_points - 1)
     # always starts at 0
     return 0
 
-def _get_next_action(current_position, epsilon):
+def get_next_action(current_position: int, epsilon: float) -> int:
+    r"""
+    Get the next action
+
+    Parameters:
+    -----------
+    current_position (int): current position
+    epsilon (float): probability of taking a random action
+    """
+
     if np.random.random() < epsilon:
         return np.argmax(q_values[current_position, 0])
     else:
         return np.random.randint(0, len(actions))
 
-def _get_next_position(current_position, action):
+def get_next_position(current_position: int, action: int) -> int:
+    r"""
+    Get the next position
+
+    Parameters:
+    -----------
+    current_position (int): current position
+    action (int): number of steps to take
+    """
     if current_position + action >= nb_points:
         return current_position
     else:
         return current_position + action
 
 
-def _get_path(position):
-    if _is_terminal_state(position):
+def get_path(position: int) -> list:
+    r"""
+    Get the path from the starting position to the terminal state
+
+    Parameters:
+    -----------
+    position (int): starting position
+    """
+    if is_terminal_state(position):
         print("invalid starting point")
         return []
 
     current_position = position
     path = [current_position]
-    while _is_terminal_state(current_position) != True:
-        action = _get_next_action(current_position, 1)
-        current_position = _get_next_position(current_position, action)
+    while not is_terminal_state(current_position):
+        action = get_next_action(current_position, 1)
+        current_position = get_next_position(current_position, action)
         path.append(current_position)
     return path
 
 
-def main():
-    #define training parameters
-    epsilon = 0.9 #the percentage of time when we should take the best action (instead of a random action)
-    discount_factor = 0.9 #discount factor for future rewards
-    learning_rate = 0.9 #the rate at which the AI agent should learn
+def main(settings, seed=14):
 
-    #run through 1000 training episodes
-    for episode in range(1000):
+    # set seed
+    np.random.seed(seed)
+
+
+    epsilon = settings["epsilon"]  # the percentage of time when we should take the best action (instead of a random action)
+    discount_factor = settings["discount_factor"]  # discount factor for future rewards
+    learning_rate = settings["learning_rate"]  # the rate at which the AI agent should learn
+    nb_episodes = settings["nb_episodes"]
+
+
+    rmse_global = [10]
+    reward_global = [-100]
+
+    #run through training episodes
+    for episode in range(nb_episodes):
         print(f"episode: {episode}")
         #get the starting location for this episode
-        position = _get_starting_position()
+        position = get_starting_position()
         known_positions = []
         #continue taking actions (i.e., moving) until we reach a terminal state
         #(i.e., until we reach the item packaging area or crash into an item storage location)
         state = 0
-        while _is_terminal_state(position) != True:
+        while not is_terminal_state(position):
             #choose which action to take (i.e., where to move next)
-            action_index = _get_next_action(position, epsilon)
+            action_index = get_next_action(position, epsilon)
             #perform the chosen action, and transition to the next state (i.e., move to the next location)
             old_position = position  #store the old row and column indexes
-            position = _get_next_position(position, action_index)
+            position = get_next_position(position, action_index)
 
             #receive the reward for moving to the new state, and calculate the temporal difference
-            reward = _get_reward(position, known_positions, "./data/slice.txt", episode, state)
+            reward, rmse = get_reward(position, known_positions, "./data/slice.txt", episode, state,
+                                      nb_episodes, rmse_global, reward_global)
 
             # reward = rewards[position, 0]
             old_q_value = q_values[position, 0, action_index]
@@ -196,9 +292,17 @@ def main():
 
             state += 1
 
+        reward_global.append(reward)
+        rmse_global.append(rmse)
+
     print('Training complete!')
-    print(_get_path(1))
 
 
 if __name__ == "__main__":
-    main()
+    settings = {"epsilon": 0.9,  # the percentage of time when we should take the best action (instead of a random action)
+                "discount_factor": 0.8,  # discount factor for future rewards
+                "learning_rate": 0.8,  # the rate at which the AI agent should learn
+                "nb_episodes": 100  # the number of episodes to run the training for}
+                }
+    main(settings)
+    print(get_path(5))

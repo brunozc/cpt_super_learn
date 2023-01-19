@@ -1,5 +1,8 @@
-.code/
+.vscode/
 .idea/
 venv/
-results/
+results*/
 __pycache__/
+*.mp4
+*.gif
+*.png
