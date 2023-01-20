@@ -19,10 +19,7 @@ def natural_keys(text):
 
 
 def create_gif(image_list, gif_name):
-    # create the frames
-    frames = []
-    for image_name in image_list:
-        frames.append(iio.imread(image_name))
+    frames = [iio.imread(image_name) for image_name in image_list]
     # save them as frames into a gif
     iio.imwrite(gif_name, frames, fps=60)
 

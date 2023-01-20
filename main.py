@@ -2,17 +2,8 @@ import os
 import numpy as np
 import matplotlib.pylab as plt
 import matplotlib as mpl
-
+# interpolation
 from IDW import InverseDistance
-
-# define environment
-## states
-nb_points = 51
-## actions
-actions = [1, 2, 4, 6, 8, 10, 12, 14]
-q_values = np.zeros((nb_points, 1, len(actions)))
-## rewards
-rewards = np.full((nb_points, 1), -1)
 
 
 def make_plot(episode, state, cpt, depth, cpt_position, idw, new_data, RMSE,
@@ -82,8 +73,8 @@ def make_plot(episode, state, cpt, depth, cpt_position, idw, new_data, RMSE,
 
 def get_reward(current_position: int, known_positions: list, data: str,
                episode: int, state: int, nb_episodes: int,
-               rmse_global: list, reward_global: list, cost_cpt: float = -1, cost_rmse: float = 5,
-               output_folder: str = "results", plots: bool = True):
+               rmse_global: list, reward_global: list, output_folder,
+               cost_cpt: float = -1, cost_rmse: float = 5, plots: bool = True):
     r"""
     Custom reward function
     The interpolation is currently Inversed Distance Weighting (IDW)
@@ -244,7 +235,17 @@ def get_path(position: int) -> list:
     return path
 
 
-def main(settings, seed=14):
+def main(settings, input_data, output_folder="results", seed=14):
+    r"""
+    Main function for the Q-learning algorithm
+
+    Parameters:
+    -----------
+    settings (dict): dictionary with the settings
+    input_data (str): path to the input data
+    output_folder (str): path to the output folder
+    seed (int): seed for the random number generator
+    """
 
     # set seed
     np.random.seed(seed)
@@ -276,8 +277,8 @@ def main(settings, seed=14):
             position = get_next_position(position, action_index)
 
             #receive the reward for moving to the new state, and calculate the temporal difference
-            reward, rmse = get_reward(position, known_positions, "./data/slice.txt", episode, state,
-                                      nb_episodes, rmse_global, reward_global)
+            reward, rmse = get_reward(position, known_positions, input_data, episode, state,
+                                      nb_episodes, rmse_global, reward_global, output_folder)
 
             # reward = rewards[position, 0]
             old_q_value = q_values[position, 0, action_index]
@@ -302,7 +303,16 @@ if __name__ == "__main__":
     settings = {"epsilon": 0.9,  # the percentage of time when we should take the best action (instead of a random action)
                 "discount_factor": 0.8,  # discount factor for future rewards
                 "learning_rate": 0.8,  # the rate at which the AI agent should learn
-                "nb_episodes": 100  # the number of episodes to run the training for}
+                "nb_episodes": 100  # the number of episodes to run the training
                 }
-    main(settings)
+
+    # define environment
+    # states
+    nb_points = 51
+    # actions
+    actions = [1, 2, 5, 10, 15]
+    q_values = np.zeros((nb_points, 1, len(actions)))
+    # rewards
+    rewards = np.full((nb_points, 1), -1)
+    main(settings, r"./data/slice.txt", output_folder="./results")
     print(get_path(5))
