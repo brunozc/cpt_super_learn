@@ -169,20 +169,21 @@ def is_terminal_state(current_position: int) -> bool:
     -----------
     current_position (int): current position
     """
-    if current_position >= nb_points - 1:
+    if (current_position >= nb_points - 1) or (current_position <= 0):
         return True
     else:
         return False
 
-def get_starting_position() -> int:
+def get_starting_position(actions: list) -> int:
     r"""
     Get the starting position
 
-    Always starts at 0
+    Parameters:
+    -----------
+    actions (list): list of actions
     """
-    # return np.random.randint(0, nb_points - 1)
-    # always starts at 0
-    return 0
+    return actions[np.random.randint(len(actions))]
+
 
 def get_next_action(current_position: int, epsilon: float) -> int:
     r"""
@@ -208,7 +209,7 @@ def get_next_position(current_position: int, action: int) -> int:
     current_position (int): current position
     action (int): number of steps to take
     """
-    if current_position + action >= nb_points:
+    if (current_position + action >= nb_points) or (current_position + action < 0):
         return current_position
     else:
         return current_position + action
@@ -229,13 +230,13 @@ def get_path(position: int) -> list:
     current_position = position
     path = [current_position]
     while not is_terminal_state(current_position):
-        action = get_next_action(current_position, 1)
-        current_position = get_next_position(current_position, action)
+        action_index = get_next_action(current_position, 1)
+        current_position = get_next_position(current_position, actions[action_index])
         path.append(current_position)
     return path
 
 
-def main(settings, input_data, output_folder="results", seed=14):
+def main(settings, input_data, output_folder="results", seed=14, plots=True):
     r"""
     Main function for the Q-learning algorithm
 
@@ -245,6 +246,7 @@ def main(settings, input_data, output_folder="results", seed=14):
     input_data (str): path to the input data
     output_folder (str): path to the output folder
     seed (int): seed for the random number generator
+    plots (bool): if True, make plots
     """
 
     # set seed
@@ -264,8 +266,8 @@ def main(settings, input_data, output_folder="results", seed=14):
     for episode in range(nb_episodes):
         print(f"episode: {episode}")
         #get the starting location for this episode
-        position = get_starting_position()
-        known_positions = []
+        position = get_starting_position(actions)
+        known_positions = [position]
         #continue taking actions (i.e., moving) until we reach a terminal state
         #(i.e., until we reach the item packaging area or crash into an item storage location)
         state = 0
@@ -273,16 +275,15 @@ def main(settings, input_data, output_folder="results", seed=14):
             #choose which action to take (i.e., where to move next)
             action_index = get_next_action(position, epsilon)
             #perform the chosen action, and transition to the next state (i.e., move to the next location)
-            old_position = position  #store the old row and column indexes
-            position = get_next_position(position, action_index)
+            position = get_next_position(position, actions[action_index])
 
             #receive the reward for moving to the new state, and calculate the temporal difference
             reward, rmse = get_reward(position, known_positions, input_data, episode, state,
-                                      nb_episodes, rmse_global, reward_global, output_folder)
+                                      nb_episodes, rmse_global, reward_global, output_folder, plots=plots)
 
             # reward = rewards[position, 0]
             old_q_value = q_values[position, 0, action_index]
-            temporal_difference = reward + (discount_factor * np.max(q_values[position])) - old_q_value
+            temporal_difference = reward + (discount_factor * np.max(q_values[position, 0])) - old_q_value
 
             #update the Q-value for the previous state and action pair
             new_q_value = old_q_value + (learning_rate * temporal_difference)
@@ -292,6 +293,10 @@ def main(settings, input_data, output_folder="results", seed=14):
             known_positions.append(position)
 
             state += 1
+
+        if state == 0:
+            reward = reward_global[0]
+            rmse = rmse_global[0]
 
         reward_global.append(reward)
         rmse_global.append(rmse)
@@ -310,9 +315,10 @@ if __name__ == "__main__":
     # states
     nb_points = 51
     # actions
-    actions = [1, 2, 5, 10, 15]
+    actions = [1, 5, 10, 15]
     q_values = np.zeros((nb_points, 1, len(actions)))
     # rewards
     rewards = np.full((nb_points, 1), -1)
-    main(settings, r"./data/slice.txt", output_folder="./results")
+    main(settings, r"./data/slice.txt", output_folder="./results", plots=True)
+    print(get_path(1))
     print(get_path(5))
