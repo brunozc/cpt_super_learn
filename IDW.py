@@ -45,13 +45,14 @@ class InverseDistance:
         # get distances and indexes of the closest nb_points
         dist, idx = self.tree.query(prediction_points.reshape(-1, 1), self.nb_near_points)
         dist += self.tol  # to overcome division by zero
-        zn = []
 
-        # create interpolation for every point
-        for i in range(len(prediction_points)):
-            # compute weights
-            data = self.training_data[idx[i]]
-            # interpolate
-            zn.append(np.sum((data.T / dist[i] ** self.power) / np.sum(1.0 / dist[i] ** self.power), axis=1))
+        # Compute weights
+        weights = 1.0 / (dist ** self.power)
 
-        self.prediction = np.array(zn)
+        # Normalize weights
+        normalized_weights = weights / np.sum(weights, axis=1, keepdims=True)
+
+        # Perform weighted average using broadcasting
+        zn = np.sum(self.training_data[idx] * normalized_weights[:, :, np.newaxis], axis=1)
+
+        self.prediction = zn
