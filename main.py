@@ -26,11 +26,14 @@ def make_plot(episode, state, cpt, depth, cpt_position, idw, new_data, RMSE,
     ax[2, 1].set_position([0.60, 0.10, 0.35, 0.25])
     for i, x in enumerate(cpt_position):
         ax[0, 0].scatter(np.ones(len(depth[i])) * x, depth[i], c=cpt[i],
-                         vmin=vmin, vmax=vmax, marker="s", s=3,  cmap="viridis")
+                         vmin=vmin, vmax=vmax, marker="s", s=3, cmap="viridis")
 
     x, y = np.meshgrid(unique_x, unique_y, indexing="ij")
-    ax[1, 0].scatter(x, y, c=idw.prediction, vmin=vmin, vmax=vmax, marker="s", s=15,  cmap="viridis")
-    ax[2, 0].scatter(x, y, c=new_data, vmin=vmin, vmax=vmax, marker="s", s=15,  cmap="viridis")
+    ax[1, 0].imshow(idw.prediction.T[::-1], vmin=vmin, vmax=vmax, cmap="viridis",
+                    extent=[0, np.max(x), 0, np.max(y)], aspect="auto")
+    ax[2, 0].imshow(new_data.T[::-1], vmin=vmin, vmax=vmax, cmap="viridis",
+                    extent=[0, np.max(x), 0, np.max(y)], aspect="auto")
+
     ax[0, 0].grid()
     ax[1, 0].grid()
     ax[2, 0].grid()
@@ -252,12 +255,10 @@ def main(settings, input_data, output_folder="results", seed=14, plots=True):
     # set seed
     np.random.seed(seed)
 
-
     epsilon = settings["epsilon"]  # the percentage of time when we should take the best action (instead of a random action)
     discount_factor = settings["discount_factor"]  # discount factor for future rewards
     learning_rate = settings["learning_rate"]  # the rate at which the AI agent should learn
     nb_episodes = settings["nb_episodes"]
-
 
     rmse_global = [10]
     reward_global = [-100]
@@ -268,8 +269,7 @@ def main(settings, input_data, output_folder="results", seed=14, plots=True):
         #get the starting location for this episode
         position = get_starting_position(actions)
         known_positions = [position]
-        #continue taking actions (i.e., moving) until we reach a terminal state
-        #(i.e., until we reach the item packaging area or crash into an item storage location)
+        # continue taking actions (i.e., moving) until we reach a terminal state
         state = 0
         while not is_terminal_state(position):
             #choose which action to take (i.e., where to move next)
@@ -292,7 +292,7 @@ def main(settings, input_data, output_folder="results", seed=14, plots=True):
             # update known positions
             known_positions.append(position)
 
-            state += 1
+            state = position
 
         if state == 0:
             reward = reward_global[0]
