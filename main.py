@@ -319,6 +319,6 @@ if __name__ == "__main__":
     q_values = np.zeros((nb_points, 1, len(actions)))
     # rewards
     rewards = np.full((nb_points, 1), -1)
-    main(settings, r"./data/slice.txt", output_folder="./results", plots=True)
+    main(settings, r"./training_data/data/slice_000.txt", output_folder="./results", plots=True)
     print(get_path(1))
     print(get_path(5))

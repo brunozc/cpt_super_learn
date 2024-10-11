@@ -28,9 +28,8 @@ class InverseDistance:
         # assign to variables
         self.training_points = np.array(training_points)  # training points
         self.training_data = np.array(training_data)  # data at the training points
-
         # compute Euclidean distance from grid to training
-        self.tree = cKDTree(self.training_points.reshape(-1, 1))
+        self.tree = cKDTree(self.training_points)
 
     def predict(self, prediction_points):
         """
@@ -43,7 +42,7 @@ class InverseDistance:
         if len(self.training_points) <= self.nb_near_points:
             self.nb_near_points = len(self.training_points)
         # get distances and indexes of the closest nb_points
-        dist, idx = self.tree.query(prediction_points.reshape(-1, 1), self.nb_near_points)
+        dist, idx = self.tree.query(prediction_points, self.nb_near_points)
         dist += self.tol  # to overcome division by zero
 
         # Compute weights
@@ -53,6 +52,6 @@ class InverseDistance:
         normalized_weights = weights / np.sum(weights, axis=1, keepdims=True)
 
         # Perform weighted average using broadcasting
-        zn = np.sum(self.training_data[idx] * normalized_weights[:, :, np.newaxis], axis=1)
+        zn = np.sum(self.training_data[idx] * normalized_weights, axis=1)
 
         self.prediction = zn

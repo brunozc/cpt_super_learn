@@ -29,6 +29,9 @@ def main(folder, output_gif):
     episodes.sort(key=natural_keys)
     image_list = []
     for ep in episodes:
+        print(f"Processing episode {ep} of {len(episodes)}")
+        if ".pth" in ep or ".pkl" in ep or ".json" in ep or ".mp4" in ep or ".gif" in ep or ".png" in ep or ".jpg" in ep:
+            continue
         images = os.listdir(os.path.join(folder, ep))
         images.sort(key=natural_keys)
         image_list.extend([os.path.join(folder, ep, image) for image in images])
@@ -37,4 +40,4 @@ def main(folder, output_gif):
 
 
 if __name__ == "__main__":
-    main("./results", "results.mp4")
+    main("./results_schemaGAN_relu_explore_just_one", "results_schemaGAN_relu_explore_just_one.mp4")

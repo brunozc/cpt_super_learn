@@ -7,6 +7,7 @@ import matplotlib.pylab as plt
 import matplotlib as mpl
 import torch
 # import torch.nn.functional as F
+from logger import Logger
 
 # interpolation
 from IDW import InverseDistance
@@ -74,7 +75,7 @@ def make_plot(episode, state, cpt, depth, cpt_position, idw, new_data, unique_x,
 
 def get_reward(idx_current_position: int, idx_known_positions: list, data: np.ndarray,
                episode: int, output_folder: str, file_name: str,
-               cost_cpt: float = -10, cost_rmse: float = 5, plots: bool = True):
+               cost_cpt: float = 0, cost_rmse: float = 5, plots: bool = True):
     r"""
     Custom reward function
     The interpolation is currently Inverse Distance Weighting (IDW)
@@ -120,6 +121,7 @@ def get_reward(idx_current_position: int, idx_known_positions: list, data: np.nd
     if len(cpt_position) < 2:
         return -10, 10
 
+    #TODO replace by a better interpolation SchemaGAN
     # perform interpolation
     idw = InverseDistance(nb_points=6)
     idw.interpolate(cpt_position, np.array(cpt)[idx])
@@ -168,9 +170,9 @@ def get_next_action(q_values: np.ndarray, actions: list, epsilon: float) -> int:
     """
 
     if np.random.random() > epsilon:
-        return np.argmax(q_values)
+        return np.argmax(q_values), "Exploit"
     else:
-        return np.random.randint(0, len(actions))
+        return np.random.randint(0, len(actions)), "Explore"
 
 
 def get_next_position(current_position_idx: int, action: int, nb_points: int) -> int:
@@ -299,7 +301,7 @@ def check_update(num_steps, steps_update, length_data, minimum_batch_size):
 
 
 def update_q_network(experiences: tuple, gamma: float,
-                     q_network: torch.nn.Module, target_network: torch.nn.Module, tau=1e-3):
+                     q_network: torch.nn.Module, target_network: torch.nn.Module, tau=1e-1):
     """
     Updates the weights of the Q network
 
@@ -316,16 +318,21 @@ def update_q_network(experiences: tuple, gamma: float,
 
     with torch.no_grad():
         # Compute max Q(s', a')
-        max_qsa, _ = torch.max(target_network.forward(next_states), axis=1)
-
+        max_qsa, indices = torch.max(target_network.forward(next_states), axis=1)
+        # log the max indices. Are they the same as the actions?
+        print(f"max indices: {indices}.")
+    # avoid problem Numpy not Availble in Pytorch 1.9
+    max_qsa_array = np.array([float(i) for i in max_qsa])
     # compute y values following Bellman Equation
-    y_targets = rewards + (gamma * max_qsa.detach().numpy() * (1 - done_vals))
+    y_targets = rewards + (gamma * max_qsa_array * (1 - done_vals))
 
     # get q_values
     q_values = q_network.forward(states)
+    # action values to torch tensor
+    actions = torch.Tensor(actions).long()
     q_values = q_values[torch.arange(q_values.shape[0]), actions]
 
-    # # compute the loss
+    # compute the loss and backpropagate
     q_network.run(q_values.view(-1, 1), torch.Tensor(y_targets).view(-1, 1))
 
     # update weights of target q_network : soft update
@@ -337,7 +344,7 @@ def update_q_network(experiences: tuple, gamma: float,
 
 def get_new_eps(epsilon):
     E_MIN = 0.01
-    E_DECAY = 0.999
+    E_DECAY = 0.99
     return max(E_MIN, E_DECAY * epsilon)
 
 
@@ -373,6 +380,16 @@ def main(training_data_folder, output_folder, plots=True):
     num_steps_update = 24
     batch_size = 64
     memory_size = 500
+    max_cpts = 10
+
+    # initialise the logger
+    logger = Logger("CPTSuperLearn", 
+                    "RL_nn_investigation", {"epsilon": epsilon, 
+                                 "gamma": gamma, 
+                                 "num_steps_update": num_steps_update,
+                                 "batch_size": batch_size, 
+                                 "memory_size": memory_size,
+                                 "max_cpts": max_cpts,})
 
     # delete output folder if exists
     if os.path.isdir(output_folder):
@@ -420,10 +437,10 @@ def main(training_data_folder, output_folder, plots=True):
             # From the current state S choose an action A using an ε-greedy policy
             with torch.no_grad():
                 q_values = DeepQNetwork.forward(torch.Tensor(state))
-
+            # avoid problem Numpy not Availble in Pytorch 1.9
+            q_values_array = np.array([float(i) for i in q_values.detach()])
             #choose which action to take (i.e., where to move next)
-            action_index = get_next_action(q_values.detach().numpy(), actions, epsilon)
-
+            action_index, action_state = get_next_action(q_values_array, actions, epsilon)
             # perform the chosen action, and transition to the next state (i.e., move to the next location)
             position_idx = get_next_position(position_idx, actions[action_index], max_nb_pixels)
             # compute reward
@@ -432,14 +449,17 @@ def main(training_data_folder, output_folder, plots=True):
             score += reward
             last_index.append(position_idx)
 
-            if (0 >= position_idx >= max_nb_pixels) or (last_index.count(last_index[-1]) > 5):
+            if (0 >= position_idx >= max_nb_pixels) or (last_index.count(last_index[-1]) > max_cpts):
                 terminal = True
             else:
                 terminal = False
 
             # add to experience replay
-            experiences_replay.append(experience_tupple(state, action_index, reward,
-                                                        get_state2(position_idx, known_positions_idx, input_data), terminal))
+            experiences_replay.append(experience_tupple(state, 
+                                                        action_index, 
+                                                        reward,
+                                                        get_state2(position_idx, known_positions_idx, input_data), 
+                                                        terminal))
             # check if it is time to update the Q-network
             update = check_update(iteration, num_steps_update, len(experiences_replay), batch_size)
 
@@ -458,6 +478,21 @@ def main(training_data_folder, output_folder, plots=True):
             # update counter
             iteration += 1
 
+            if len(DeepQNetwork.loss) > 0:
+                loss = DeepQNetwork.loss[-1]
+            else:
+                loss = 0
+            # log the data
+            logger.log({"score": score, 
+                        "rmse": rmse, 
+                        "position": position_idx, 
+                        "reward": reward,  
+                        "loss": loss,
+                        "epsilon": epsilon,
+                        "episode": episode, 
+                        "iteration": iteration,
+                        "action": action_state,})
+
         # update epsilon
         epsilon = get_new_eps(epsilon)
         scores.append(score)
@@ -470,7 +505,9 @@ def main(training_data_folder, output_folder, plots=True):
             TargetQNetwork.save_model(output_folder, f"target_{episode}.pth")
             # dump data
             dump_data(scores, rmses, output_folder, f"summary_{episode}.json")
+    logger.finish()
 
 
 if __name__ == "__main__":
-    main("./data/train", "./output")
+    main("./training_data/data/train", "./results")
+    print("Done")

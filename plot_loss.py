@@ -7,7 +7,7 @@ from smooth import smooth
 
 
 index = 100
-output_folder = "./output"
+output_folder = "./results_schemaGAN_actions_restricted_2"
 
 with open(os.path.join(output_folder, f"summary_{index}.json"), "r") as f:
     summary = json.load(f)

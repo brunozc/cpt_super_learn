@@ -1,0 +1,27 @@
+{
+  "case_1": {
+    "interpolation_method": "InverseDistance",
+    "state_function": "get_state2",
+    "reward_function": "get_reward_rmse_based"
+  },
+  "case_2": {
+    "interpolation_method": "SchemaGAN",
+    "state_function": "get_state2",
+    "reward_function": "get_reward_rmse_based"
+  },
+  "case_3": {
+        "interpolation_method": "SchemaGAN",
+        "state_function": "get_state_full_arrays",
+        "reward_function": "get_reward_accuracy_based"
+  },
+  "case_4": {
+        "interpolation_method": "SchemaGAN",
+        "state_function": "get_state_full_arrays",
+        "reward_function": "get_reward_rmse_based"
+  } ,
+  "case_5": {
+        "interpolation_method": "SchemaGAN",
+        "state_function": "get_state_full_arrays",
+        "reward_function": "get_reward_variation_based"
+  }
+}
