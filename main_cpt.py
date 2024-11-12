@@ -1,14 +1,15 @@
+import random
 import numpy as np
+import torch
 from CPTSuperLearn.utils import input_random_data_file
 from CPTSuperLearn.environment import CPTEnvironment
 from CPTSuperLearn.agent import DQLAgent
 
 
-import torch
-import random
-random.seed(42)
-np.random.seed(42)
-torch.manual_seed(42)
+# fix all the seeds
+random.seed(14)
+np.random.seed(14)
+torch.manual_seed(14)
 
 def main(nb_episodes: int, cpt_env: CPTEnvironment, training_data_folder: str, settings_DQN: dict):
 
@@ -24,11 +25,8 @@ def main(nb_episodes: int, cpt_env: CPTEnvironment, training_data_folder: str, s
                      batch_size = settings_DQN["batch_size"],
                      nb_steps_update=settings_DQN["nb_steps_update"])
 
-
-
     total_score = []
 
-    iter = 0
     for episode in range(nb_episodes):
         file_name, image_data = input_random_data_file(training_data_folder)
 
@@ -43,7 +41,6 @@ def main(nb_episodes: int, cpt_env: CPTEnvironment, training_data_folder: str, s
 
             state = next_state
             score += reward
-            iter += 1
             if terminal:
                 break
 
