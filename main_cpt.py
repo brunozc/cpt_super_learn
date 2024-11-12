@@ -1,7 +1,9 @@
+import os
 import random
 import numpy as np
 import torch
-from CPTSuperLearn.utils import input_random_data_file
+
+from CPTSuperLearn.utils import input_random_data_file, write_rmse
 from CPTSuperLearn.environment import CPTEnvironment
 from CPTSuperLearn.agent import DQLAgent
 
@@ -11,7 +13,7 @@ random.seed(14)
 np.random.seed(14)
 torch.manual_seed(14)
 
-def main(nb_episodes: int, cpt_env: CPTEnvironment, training_data_folder: str, settings_DQN: dict):
+def main(nb_episodes: int, cpt_env: CPTEnvironment, training_data_folder: str, settings_DQN: dict, output_folder: str):
 
     # define agent
     agent = DQLAgent(state_size=settings_DQN["state_size"],
@@ -50,13 +52,15 @@ def main(nb_episodes: int, cpt_env: CPTEnvironment, training_data_folder: str, s
         if episode % 10 == 0:
             print(f"Episode {episode} Average Score: {average_score:.2f} Epsilon: {agent.epsilon:.2f}")
 
-    agent.save_model("./results/cpt_model.pth")
+    agent.save_model(os.path.join(output_folder, "cpt_model.pth"))
+    write_rmse(range(nb_episodes), total_score, os.path.join(output_folder, "cpt_rmse.txt"))
 
 
 if __name__ == "__main__":
     training_data_folder = "./data_fabian/train"
     num_episodes = 100
     actions = [10, 25, 50, 100, 150]  # actions in number of pixels
+    output_folder = "results"
 
     settings_dqn = {"state_size": 6,
                     "action_size": len(actions),
@@ -77,4 +81,4 @@ if __name__ == "__main__":
                              interpolator_points=6,
                              )
 
-    main(num_episodes, cpt_env, training_data_folder, settings_dqn)
+    main(num_episodes, cpt_env, training_data_folder, settings_dqn, output_folder)

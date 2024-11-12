@@ -1,4 +1,5 @@
 import os
+from typing import List
 import numpy as np
 
 
@@ -29,3 +30,21 @@ def input_random_data_file(training_data_folder: str) -> np.ndarray:
     data = sorted(data, key=lambda x: (x[0], x[1]))
 
     return files[idx].split(".txt")[0], np.array(data)
+
+def write_rmse(episode: List, total_score: List, output_file: str):
+    """
+    Writes the RMSE to a file
+
+    Parameters:
+    -----------
+    :param total_score: list with the RMSE
+    :param output_file: output file
+    """
+
+    # check if folder exists
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+    with open(output_file, "w") as fo:
+        fo.write("Episode;RMSE\n")
+        for ep, score in zip(episode, total_score):
+            fo.write(f"{ep};{score}\n")
