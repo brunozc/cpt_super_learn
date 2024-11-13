@@ -13,7 +13,20 @@ random.seed(14)
 np.random.seed(14)
 torch.manual_seed(14)
 
-def main(nb_episodes: int, cpt_env: CPTEnvironment, training_data_folder: str, settings_DQN: dict, output_folder: str):
+def main(nb_episodes: int, cpt_env: CPTEnvironment, training_data_folder: str, settings_DQN: dict, output_folder: str,
+         make_plots=False):
+    """
+    Train the DRL model
+
+    Parameters
+    ----------
+    :param nb_episodes: number of episodes
+    :param cpt_env: environment
+    :param training_data_folder: folder with the training data
+    :param settings_DQN: settings for the DQN model
+    :param output_folder: output folder
+    :param make_plots: make plots
+    """
 
     # define agent
     agent = DQLAgent(state_size=settings_DQN["state_size"],
@@ -48,7 +61,9 @@ def main(nb_episodes: int, cpt_env: CPTEnvironment, training_data_folder: str, s
 
         total_score.append(score)
         average_score = np.mean(total_score)
-        cpt_env.plot_environment(os.path.join(output_folder, "training", f"{file_name}_episode_{episode}.png"))
+
+        if make_plots:
+            cpt_env.plot_environment(os.path.join(output_folder, "training", f"{file_name}_episode_{episode}.png"))
 
         if episode % 10 == 0:
             print(f"Episode {episode} Average Score: {average_score:.2f} Epsilon: {agent.epsilon:.2f}")
