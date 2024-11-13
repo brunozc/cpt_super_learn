@@ -48,12 +48,13 @@ def main(nb_episodes: int, cpt_env: CPTEnvironment, training_data_folder: str, s
 
         total_score.append(score)
         average_score = np.mean(total_score)
+        cpt_env.plot_environment(os.path.join(output_folder, "training", f"{file_name}_episode_{episode}.png"))
 
         if episode % 10 == 0:
             print(f"Episode {episode} Average Score: {average_score:.2f} Epsilon: {agent.epsilon:.2f}")
 
     agent.save_model(os.path.join(output_folder, "cpt_model.pth"))
-    write_rmse(range(nb_episodes), total_score, os.path.join(output_folder, "cpt_rmse.txt"))
+    write_rmse(range(nb_episodes), total_score, os.path.join(output_folder, "cpt_score.txt"))
 
 
 if __name__ == "__main__":

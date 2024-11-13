@@ -29,7 +29,7 @@ def input_random_data_file(training_data_folder: str) -> np.ndarray:
     # sort data
     data = sorted(data, key=lambda x: (x[0], x[1]))
 
-    return files[idx].split(".txt")[0], np.array(data)
+    return files[idx].split(".csv")[0], np.array(data)
 
 def write_rmse(episode: List, total_score: List, output_file: str):
     """
