@@ -1,4 +1,5 @@
 import os
+from tqdm import tqdm
 import torch
 import numpy as np
 from collections import deque
@@ -32,11 +33,9 @@ def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_fol
     validation_scores = []
     rmse_scores = []
 
-    val_files = os.listdir(validation_data_folder)[:10]
+    val_files = os.listdir(validation_data_folder)
 
-    i=0
-    for fil in val_files:
-        print(f"{i}")
+    for fil in tqdm(val_files):
         file_name, image_data = read_data_file(os.path.join(validation_data_folder, fil))
         state = cpt_env.reset(file_name, image_data)
         score = 0
@@ -54,7 +53,6 @@ def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_fol
         validation_scores.append(score)
         rmse = np.sqrt(np.mean((cpt_env.true_data - cpt_env.predicted_data) ** 2))
         rmse_scores.append(rmse)
-        i+=1
 
         if make_plots:
             cpt_env.plot_environment(os.path.join(output_folder, "images", f"file_{file_name}"))
