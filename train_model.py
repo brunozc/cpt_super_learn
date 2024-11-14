@@ -3,7 +3,7 @@ import random
 import numpy as np
 import torch
 
-from CPTSuperLearn.utils import input_random_data_file, write_rmse
+from CPTSuperLearn.utils import input_random_data_file, write_score
 from CPTSuperLearn.environment import CPTEnvironment
 from CPTSuperLearn.agent import DQLAgent
 
@@ -51,13 +51,13 @@ def main(nb_episodes: int, cpt_env: CPTEnvironment, agent: DQLAgent, training_da
         average_score = np.mean(total_score)
 
         if make_plots:
-            cpt_env.plot_environment(os.path.join(output_folder, "training", f"{file_name}_episode_{episode}.png"))
+            cpt_env.plot_environment(os.path.join(output_folder, "training", f"episode_{episode}_file_{file_name}"))
 
         if episode % 10 == 0:
             print(f"Episode {episode} Average Score: {average_score:.2f} Epsilon: {agent.epsilon:.2f}")
 
     agent.save_model(os.path.join(output_folder, "cpt_model.pth"))
-    write_rmse(range(nb_episodes), total_score, os.path.join(output_folder, "cpt_score.txt"))
+    write_score(range(nb_episodes), total_score, os.path.join(output_folder, "cpt_score.txt"))
 
 
 if __name__ == "__main__":
@@ -84,4 +84,4 @@ if __name__ == "__main__":
                          batch_size=64,
                          nb_steps_update=10)
 
-    main(num_episodes, cpt_env, cpt_agent, training_data_folder, output_folder)
+    main(num_episodes, cpt_env, cpt_agent, training_data_folder, output_folder, make_plots=False)
