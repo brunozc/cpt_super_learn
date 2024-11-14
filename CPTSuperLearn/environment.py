@@ -5,12 +5,12 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import torch
 
-from CPTSuperLearn.interpolator import InverseDistance
+from CPTSuperLearn.interpolator import InterpolatorAbc
 
 
 class CPTEnvironment:
     def __init__(self, action_list: List[int], max_nb_cpts: int, cpt_cost: float, image_width: int,
-                 max_first_step: int, interpolator_points: int):
+                 max_first_step: int, interpolation_method: InterpolatorAbc):
         """
         Initialize the CPT environment
 
@@ -21,7 +21,7 @@ class CPTEnvironment:
         :param cpt_cost: cost of a CPT
         :param image_width: width of the image
         :param max_first_step: maximum first step
-        :param interpolator_points: number of points for the interpolator
+        :param interpolation_method: method to perform interpolation
         """
 
         self.action_list = action_list
@@ -32,7 +32,7 @@ class CPTEnvironment:
 
         self.reward_out_of_bounds = 0
 
-        self.interpolator = InverseDistance(nb_points=interpolator_points)
+        self.interpolator = interpolation_method
 
         self.current_image = None
         self.current_image_id = None

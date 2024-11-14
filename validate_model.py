@@ -1,14 +1,11 @@
 import os
-from tqdm import tqdm
-import torch
 import numpy as np
-from collections import deque
-from dataclasses import dataclass
-from typing import List, Tuple
+from tqdm import tqdm
 
 from CPTSuperLearn.utils import read_data_file, write_score
 from CPTSuperLearn.environment import CPTEnvironment
 from CPTSuperLearn.agent import DQLAgent
+from CPTSuperLearn.interpolator import InverseDistance
 
 
 def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_folder: str, output_folder: str,
@@ -50,18 +47,33 @@ def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_fol
             if terminal:
                 break
 
+        # compute the RMSE and make plot for the DRL model
         validation_scores.append(score)
         rmse = np.sqrt(np.mean((cpt_env.true_data - cpt_env.predicted_data) ** 2))
-        rmse_scores.append(rmse)
-
         if make_plots:
             cpt_env.plot_environment(os.path.join(output_folder, "images", f"file_{file_name}"))
 
+        # compute the RMSE and make plot for the uniform distribution
+        # the number of CPT remains the same
+        nb_cpts  = len(cpt_env.sampled_positions)
+        idx_cpts = np.linspace(0, cpt_env.image_width-1, nb_cpts, dtype=int)
+
+        cpts = [image_data[image_data[:, 0] == i, 2] for i in idx_cpts]
+        interpolator = cpt_env.interpolator
+        interpolator.interpolate(idx_cpts, np.array(cpts))
+        interpolator.predict(np.arange(cpt_env.image_width))
+        rmse_2 = np.sqrt(np.mean((cpt_env.true_data - interpolator.prediction) ** 2))
+        if make_plots:
+            cpt_env.sampled_positions = idx_cpts
+            cpt_env.sampled_values = cpts
+            cpt_env.plot_environment(os.path.join(output_folder, "images", f"file_{file_name}_uniform"))
+
+        # combine RMSEs
+        rmse_scores.append(";".join([str(rmse), str(rmse_2)]))
 
     val_files = [os.path.splitext(os.path.basename(f))[0] for f in val_files]
     write_score(val_files, validation_scores,  os.path.join(output_folder, "validation_score.txt"))
     write_score(val_files, rmse_scores,  os.path.join(output_folder, "validation_rmse.txt"))
-
 
 
 # Example usage
@@ -75,7 +87,7 @@ if __name__ == "__main__":
                              cpt_cost=0.1,
                              image_width=512,
                              max_first_step=20,
-                             interpolator_points=6,
+                             interpolation_method=InverseDistance(nb_points=6)
                              )
 
     cpt_agent = DQLAgent(state_size=6,
@@ -90,4 +102,4 @@ if __name__ == "__main__":
                          nb_steps_update=10,
                          model_path="results/cpt_model.pth")
 
-    evaluate_model(cpt_env, cpt_agent, validation_data_folder, output_folder, make_plots=True)
+    evaluate_model(cpt_env, cpt_agent, validation_data_folder, output_folder, make_plots=False)

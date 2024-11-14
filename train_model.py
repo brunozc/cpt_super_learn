@@ -6,6 +6,7 @@ import torch
 from CPTSuperLearn.utils import input_random_data_file, write_score
 from CPTSuperLearn.environment import CPTEnvironment
 from CPTSuperLearn.agent import DQLAgent
+from CPTSuperLearn.interpolator import InverseDistance
 
 
 # fix all the seeds
@@ -71,7 +72,7 @@ if __name__ == "__main__":
                              cpt_cost=0.1,
                              image_width=512,
                              max_first_step=20,
-                             interpolator_points=6,
+                             interpolation_method=InverseDistance(nb_points=6),
                              )
     cpt_agent = DQLAgent(state_size=6,
                          action_size=len(actions),
