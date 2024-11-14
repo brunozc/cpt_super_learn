@@ -52,6 +52,8 @@ class CPTEnvironment:
         self.current_image = image_data
         self.sampled_positions = []
         self.sampled_values = []
+        self.predicted_data = None
+        self.true_data = None
 
         # Sample first cpt
         first_cpt_index = self._get_starting_position_index(self.maximum_first_step)
@@ -155,12 +157,12 @@ class CPTEnvironment:
         all_x = np.unique(self.current_image[:, 0])
         all_y = np.unique(self.current_image[:, 1])
         self.interpolator.predict(all_x)
-        predicted_values = self.interpolator.prediction
+        self.predicted_data = self.interpolator.prediction
 
-        true_data = self.current_image[:, 2].reshape(len(all_x), len(all_y))
+        self.true_data = self.current_image[:, 2].reshape(len(all_x), len(all_y))
 
         # compare at the entire field RMSE
-        RMSE = np.sqrt(np.mean((true_data - predicted_values) ** 2))
+        RMSE = np.sqrt(np.mean((self.true_data - self.predicted_data) ** 2))
 
         # Calculate reward
         cpt_penalty = self.cpt_cost * len(self.sampled_positions)
@@ -202,20 +204,17 @@ class CPTEnvironment:
 
         all_x = np.unique(self.current_image[:, 0])
         all_y = np.unique(self.current_image[:, 1])
-        predicted_values = self.interpolator.prediction
-
-        true_data = self.current_image[:, 2].reshape(len(all_x), len(all_y))
 
         for pos, dat in zip(self.sampled_positions, self.sampled_values):
             ax[0].scatter(np.ones(len(all_y)) * pos, all_y, c=dat,
                           vmin=vmin, vmax=vmax, marker="s", s=3, cmap="viridis")
 
         x, y = np.meshgrid(all_x, all_y)
-        ax[1].imshow(predicted_values.T, vmin=vmin, vmax=vmax, cmap="viridis",
+        ax[1].imshow(self.predicted_data.T, vmin=vmin, vmax=vmax, cmap="viridis",
                      extent=[0, np.max(x), np.max(y), 0])#, aspect="auto")
         ax[1].invert_yaxis()
 
-        ax[2].imshow(true_data.T, vmin=vmin, vmax=vmax, cmap="viridis",
+        ax[2].imshow(self.true_data.T, vmin=vmin, vmax=vmax, cmap="viridis",
                      extent=[0, np.max(x), np.max(y), 0])#, aspect="auto")
         ax[2].invert_yaxis()
 

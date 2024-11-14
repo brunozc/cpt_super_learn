@@ -5,14 +5,13 @@ import numpy as np
 from collections import deque, namedtuple
 import torch
 from torch import nn
-import torch.nn.functional as F
 from torch import optim
 
 
 class DQLAgent:
     def __init__(self, state_size: int, action_size: int, learning_rate: float = 1e-4, gamma: float = 0.99,
                  epsilon_start: float = 1.0, epsilon_end: float = 0.01, epsilon_decay: float = 0.995,
-                 memory_size: int = 10000, batch_size: int = 64, nb_steps_update: int = 10):
+                 memory_size: int = 10000, batch_size: int = 64, nb_steps_update: int = 10, model_path: str = None):
         """
         Initialize the DQL agent
 
@@ -28,6 +27,7 @@ class DQLAgent:
         :param memory_size: size of the replay buffer
         :param batch_size: batch size
         :param nb_steps_update: number of steps to update target network
+        :param model_path: path to save the model
         """
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -48,6 +48,7 @@ class DQLAgent:
         self.epsilon_decay = epsilon_decay
         self.nb_steps_update = nb_steps_update
         self.nb_step = 0
+        self.model_path = model_path
 
     def save_model(self, path: str):
         """
@@ -59,8 +60,22 @@ class DQLAgent:
         """
 
         os.makedirs(os.path.dirname(path), exist_ok=True)
-
+        self.model_path = path
         torch.save(self.qnetwork_local.state_dict(), path)
+
+    def load_model(self):
+        """
+        Load the model
+
+        Parameters:
+        -----------
+        :param path: path to load the model
+        """
+
+        if self.model_path is None:
+            raise ValueError("Model has not been saved yet")
+
+        self.qnetwork_local.load_state_dict(torch.load(self.model_path,  weights_only=True))
 
 
     def get_next_action(self, state: torch.Tensor, training: bool = True) -> int:
