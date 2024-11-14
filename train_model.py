@@ -55,7 +55,7 @@ def main(nb_episodes: int, cpt_env: CPTEnvironment, agent: DQLAgent, training_da
             cpt_env.plot_environment(os.path.join(output_folder, "training", f"episode_{episode}_file_{file_name}"))
 
         if episode % 10 == 0:
-            print(f"Episode {episode} Average Score: {average_score:.2f} Epsilon: {agent.epsilon:.2f}")
+            print(f"Episode {episode} / {nb_episodes} | Average score: {average_score:.2f} Epsilon: {agent.epsilon:.2f}")
 
     agent.save_model(os.path.join(output_folder, "cpt_model.pth"))
     write_score(range(nb_episodes), total_score, os.path.join(output_folder, "cpt_score.txt"))
@@ -64,22 +64,23 @@ def main(nb_episodes: int, cpt_env: CPTEnvironment, agent: DQLAgent, training_da
 if __name__ == "__main__":
     training_data_folder = "./data_fabian/train"
     num_episodes = 100
-    actions = [10, 25, 50, 100, 150]  # actions in number of pixels
+    actions = [5, 10, 25, 50, 100]  # actions in number of pixels
     output_folder = "results"
 
     cpt_env = CPTEnvironment(actions,
                              max_nb_cpts=50,
-                             cpt_cost=0.1,
+                             weight_reward_cpt=0.5,
                              image_width=512,
                              max_first_step=20,
                              interpolation_method=InverseDistance(nb_points=6),
                              )
+
     cpt_agent = DQLAgent(state_size=6,
                          action_size=len(actions),
                          learning_rate=1e-4,
                          gamma=0.99,
-                         epsilon_start=1.,
-                         epsilon_end=0.01,
+                         epsilon_start=0.95,
+                         epsilon_end=0.05,
                          epsilon_decay=0.995,
                          memory_size=10000,
                          batch_size=64,

@@ -1,8 +1,10 @@
+import os
 import numpy as np
 import matplotlib.pylab as plt
 
+path_to_results = "results/validation/"
 
-with open("results/validation/validation_rmse.txt", "r") as fi:
+with open(os.path.join(path_to_results, "validation_rmse.txt"), "r") as fi:
     data = fi.read().splitlines()
 
 data = [dat.split(";") for dat in data]
@@ -34,11 +36,9 @@ ax.set_xticklabels(['DRL', 'Standard'])
 ax.set_ylabel('RMSE')
 ax.set_ylim(bottom=0)
 ax.grid()
-# Add legend
-# ax.legend()
-
 # Show the plot
-plt.show()
+plt.savefig(os.path.join(path_to_results, "rmse_comparison.png"))
+plt.close()
 
 
 

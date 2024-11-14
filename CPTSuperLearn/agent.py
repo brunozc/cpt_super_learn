@@ -99,7 +99,7 @@ class DQLAgent:
             self.qnetwork_local.train()
             return action_values.argmax().item()
 
-    def step(self, state: torch.Tensor, action: int, reward: float, next_state: torch.Tensor, status: bool):
+    def step(self, state: torch.Tensor, action: int, reward: float, next_state: torch.Tensor, terminal: bool):
         """
         Take a step with the agent.
         Add the experience to the replay buffer and learn from it.
@@ -110,9 +110,9 @@ class DQLAgent:
         :param action: action taken
         :param reward: reward received
         :param next_state: next state
-        :param status: terminal status
+        :param terminal: terminal status
         """
-        self.memory.push(state, action, reward, next_state, status)
+        self.memory.push(state, action, reward, next_state, terminal)
 
         # update the target network with the local network
         self.nb_step = (self.nb_step + 1) % self.nb_steps_update
@@ -124,6 +124,9 @@ class DQLAgent:
         if len(self.memory) > self.batch_size:
             self._learn()
 
+        # update epsilon when terminal state is reached
+        if terminal:
+            self._update_epsilon()
 
     def _learn(self):
         """
@@ -151,7 +154,10 @@ class DQLAgent:
         loss.backward()
         self.optimizer.step()
 
-        # Update epsilon
+    def _update_epsilon(self):
+        """
+        Update epsilon
+        """
         self.epsilon = max(self.epsilon_end, self.epsilon * self.epsilon_decay)
 
 

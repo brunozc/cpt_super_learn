@@ -9,7 +9,7 @@ from CPTSuperLearn.interpolator import InverseDistance
 
 
 def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_folder: str, output_folder: str,
-                   make_plots=False):
+                   nb_cpts: int, make_plots=False):
     """
     Evaluate the model on the validation dataset
 
@@ -19,6 +19,7 @@ def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_fol
     :param agent: DQL agent
     :param validation_data_folder: folder with the validation data
     :param output_folder: output folder
+    :param nb_cpts: number of CPTs for the uniform distribution
     :param make_plots: make plots
     """
 
@@ -43,7 +44,6 @@ def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_fol
             next_state, reward, terminal = cpt_env.step(action_index)
             state = next_state
             score += reward
-
             if terminal:
                 break
 
@@ -55,8 +55,7 @@ def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_fol
 
         # compute the RMSE and make plot for the uniform distribution
         # the number of CPT remains the same
-        nb_cpts  = len(cpt_env.sampled_positions)
-        idx_cpts = np.linspace(0, cpt_env.image_width-1, nb_cpts, dtype=int)
+        idx_cpts = np.linspace(0, cpt_env.image_width - 1, nb_cpts, dtype=int)
 
         cpts = [image_data[image_data[:, 0] == i, 2] for i in idx_cpts]
         interpolator = cpt_env.interpolator
@@ -84,7 +83,7 @@ if __name__ == "__main__":
 
     cpt_env = CPTEnvironment(actions,
                              max_nb_cpts=50,
-                             cpt_cost=0.1,
+                             weight_reward_cpt=0.5,
                              image_width=512,
                              max_first_step=20,
                              interpolation_method=InverseDistance(nb_points=6)
@@ -102,4 +101,5 @@ if __name__ == "__main__":
                          nb_steps_update=10,
                          model_path="results/cpt_model.pth")
 
-    evaluate_model(cpt_env, cpt_agent, validation_data_folder, output_folder, make_plots=False)
+    nb_cpts = 4
+    evaluate_model(cpt_env, cpt_agent, validation_data_folder, output_folder, nb_cpts, make_plots=False)

@@ -9,7 +9,7 @@ from CPTSuperLearn.interpolator import InterpolatorAbc
 
 
 class CPTEnvironment:
-    def __init__(self, action_list: List[int], max_nb_cpts: int, cpt_cost: float, image_width: int,
+    def __init__(self, action_list: List[int], max_nb_cpts: int, weight_reward_cpt: float, image_width: int,
                  max_first_step: int, interpolation_method: InterpolatorAbc):
         """
         Initialize the CPT environment
@@ -18,7 +18,7 @@ class CPTEnvironment:
         -----------
         :param action_list: list of possible actions
         :param max_nb_cpts: maximum number of CPTs
-        :param cpt_cost: cost of a CPT
+        :param weight_reward_cpt: weight of the reward for the number of CPTs
         :param image_width: width of the image
         :param max_first_step: maximum first step
         :param interpolation_method: method to perform interpolation
@@ -26,9 +26,15 @@ class CPTEnvironment:
 
         self.action_list = action_list
         self.max_nb_cpts = max_nb_cpts
-        self.cpt_cost = cpt_cost
+        self.alpha = weight_reward_cpt
         self.image_width = image_width
         self.maximum_first_step = max_first_step
+        self.initial_step = None
+        self.initial_rmse = None
+
+        # check if alpha between 0 and 1
+        if self.alpha < 0 or self.alpha > 1:
+            raise ValueError("Weight_reward_cpt must be between 0 and 1")
 
         self.reward_out_of_bounds = 0
 
@@ -54,6 +60,8 @@ class CPTEnvironment:
         self.sampled_values = []
         self.predicted_data = None
         self.true_data = None
+
+        self.initial_step = True  # when reseting the environment initial step is True. needed to compute initial rmse
 
         # Sample first cpt
         first_cpt_index = self._get_starting_position_index(self.maximum_first_step)
@@ -164,9 +172,20 @@ class CPTEnvironment:
         # compare at the entire field RMSE
         RMSE = np.sqrt(np.mean((self.true_data - self.predicted_data) ** 2))
 
+        if self.initial_step:
+            self.initial_rmse = RMSE
+            self.initial_step = False
+
         # Calculate reward
-        cpt_penalty = self.cpt_cost * len(self.sampled_positions)
-        reward = -RMSE - cpt_penalty
+        # cpt_penalty = self.cpt_cost * len(self.sampled_positions)
+        # reward = -RMSE - cpt_penalty
+
+        # normalise the reward
+        beta = 1 - self.alpha
+        normalized_rmse = RMSE / self.initial_rmse
+        normalized_cpt = len(self.sampled_positions) / self.max_nb_cpts
+        reward = -(self.alpha * normalized_rmse + beta * normalized_cpt)
+
 
         return reward
 
