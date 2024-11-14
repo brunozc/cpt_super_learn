@@ -1,9 +1,30 @@
 from typing import List
+from abc import ABC, abstractmethod
 import numpy as np
 from scipy.spatial import cKDTree
 
 
-class InverseDistance:
+class InterpolatorAbc(ABC):
+    """
+    Abstract class for interpolators
+    """
+
+    @abstractmethod
+    def interpolate(self):
+        """
+        Interpolate the data
+        """
+        raise NotImplementedError("Interpolate method must be implemented")
+
+    @abstractmethod
+    def predict(self, prediction_points: List[float]):
+        """
+        Predict the data at the prediction points
+        """
+        raise NotImplementedError("Predict method must be implemented")
+
+
+class InverseDistance(InterpolatorAbc):
     """
     Inverse distance interpolator
     """
