@@ -65,6 +65,7 @@ def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_fol
         if make_plots:
             cpt_env.sampled_positions = idx_cpts
             cpt_env.sampled_values = cpts
+            cpt_env.predicted_data = interpolator.prediction
             cpt_env.plot_environment(os.path.join(output_folder, "images", f"file_{file_name}_uniform"))
 
         # combine RMSEs
@@ -78,7 +79,8 @@ def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_fol
 # Example usage
 if __name__ == "__main__":
     validation_data_folder = "./data_fabian/validation"
-    actions = [10, 25, 50, 100, 150]  # actions in number of pixels
+    actions = [10, 25, 50, 100, 150]  # actions in number of pixel
+    nb_cpts = 4
     output_folder = "results/validation"
 
     cpt_env = CPTEnvironment(actions,
@@ -101,5 +103,4 @@ if __name__ == "__main__":
                          nb_steps_update=10,
                          model_path="results/cpt_model.pth")
 
-    nb_cpts = 4
     evaluate_model(cpt_env, cpt_agent, validation_data_folder, output_folder, nb_cpts, make_plots=False)
