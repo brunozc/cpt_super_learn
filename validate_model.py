@@ -78,17 +78,16 @@ def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_fol
 
 # Example usage
 if __name__ == "__main__":
-    validation_data_folder = "./data_fabian/validation"
-    actions = [10, 25, 50, 100, 150]  # actions in number of pixel
-    nb_cpts = 4
-    output_folder = "results/validation"
+    training_data_folder = "P:/schemagan/synthetic_database/512x32_20k/validation"
+    actions = [50, 100, 150]  # actions in number of pixels
+    output_folder = "results/validation_1"
 
     cpt_env = CPTEnvironment(actions,
                              max_nb_cpts=50,
                              weight_reward_cpt=0.5,
                              image_width=512,
                              max_first_step=20,
-                             interpolation_method=InverseDistance(nb_points=6)
+                             interpolation_method=SchemaGANInterpolator("D:/model_000036.h5")
                              )
 
     cpt_agent = DQLAgent(state_size=6,
@@ -103,4 +102,5 @@ if __name__ == "__main__":
                          nb_steps_update=10,
                          model_path="results/cpt_model.pth")
 
-    evaluate_model(cpt_env, cpt_agent, validation_data_folder, output_folder, nb_cpts, make_plots=False)
+    nb_cpts = 4
+    evaluate_model(cpt_env, cpt_agent, training_data_folder, output_folder, nb_cpts, make_plots=True)
