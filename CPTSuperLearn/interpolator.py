@@ -27,6 +27,12 @@ class InterpolatorAbc(ABC):
 
 
 class SchemaGANInterpolator(InterpolatorAbc):
+    """
+    Interpolator using SchemaGAN model for interpolation.
+    For more information on SchemaGAN, see https://github.com/fabcamo/schemaGAN.
+
+    """
+
     def __init__(self, model_path: str):
         self.model_path = model_path
         self.model = load_model(model_path)
@@ -36,7 +42,16 @@ class SchemaGANInterpolator(InterpolatorAbc):
         self.training_data = []
         self.prediction = []
 
-    def interpolate(self, training_points: List[float], training_data: List[float]):
+    def check_default_size(self, data: np.ndarray):
+        """
+        Check if the data has the default size (512, 32)
+        """
+        if data.shape != (self.size_x, self.size_y):
+            raise ValueError(f"Data must have shape ({self.size_x}, {self.size_y})")
+
+    def interpolate(self, training_points: np.ndarray, training_data: np.ndarray):
+        # check the size of the data
+        self.check_default_size(training_data)
         # create a zeros array
         self.training_data = np.zeros((self.size_x, self.size_y))
         # fill the array with the training data
@@ -44,7 +59,9 @@ class SchemaGANInterpolator(InterpolatorAbc):
             self.training_data[column, :] = training_data[counter, :]
         self.training_points = training_points
 
-    def predict(self, prediction_points: List[float]):
+    def predict(self, prediction_points: np.ndarray):
+        # check the size of the data
+        self.check_default_size(prediction_points)
         # reshape the data
         normalize_training_data = np.reshape(self.training_data.T, (1, self.size_y, self.size_x, 1))
         normalize_training_data = IC_normalization(normalize_training_data)

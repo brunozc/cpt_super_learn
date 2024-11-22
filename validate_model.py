@@ -5,7 +5,7 @@ from tqdm import tqdm
 from CPTSuperLearn.utils import read_data_file, write_score
 from CPTSuperLearn.environment import CPTEnvironment
 from CPTSuperLearn.agent import DQLAgent
-from CPTSuperLearn.interpolator import InverseDistance
+from CPTSuperLearn.interpolator import InverseDistance, SchemaGANInterpolator
 
 
 def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_folder: str, output_folder: str,
@@ -78,16 +78,16 @@ def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_fol
 
 # Example usage
 if __name__ == "__main__":
-    training_data_folder = "P:/schemagan/synthetic_database/512x32_20k/validation"
+    training_data_folder = "/validation"
     actions = [50, 100, 150]  # actions in number of pixels
-    output_folder = "results/validation_1"
+    output_folder = "results/validation"
 
     cpt_env = CPTEnvironment(actions,
                              max_nb_cpts=50,
                              weight_reward_cpt=0.5,
                              image_width=512,
                              max_first_step=20,
-                             interpolation_method=SchemaGANInterpolator("D:/model_000036.h5")
+                             interpolation_method=SchemaGANInterpolator("schemagan/model_000036.h5")
                              )
 
     cpt_agent = DQLAgent(state_size=6,
