@@ -42,16 +42,10 @@ class SchemaGANInterpolator(InterpolatorAbc):
         self.training_data = []
         self.prediction = []
 
-    def check_default_size(self, data: np.ndarray):
-        """
-        Check if the data has the default size (512, 32)
-        """
-        if data.shape != (self.size_x, self.size_y):
-            raise ValueError(f"Data must have shape ({self.size_x}, {self.size_y})")
-
     def interpolate(self, training_points: np.ndarray, training_data: np.ndarray):
         # check the size of the data
-        self.check_default_size(training_data)
+        if training_data.shape[1] != self.size_y:
+            raise ValueError(f"Data must have shape (:, {self.size_y})")
         # create a zeros array
         self.training_data = np.zeros((self.size_x, self.size_y))
         # fill the array with the training data
@@ -61,7 +55,8 @@ class SchemaGANInterpolator(InterpolatorAbc):
 
     def predict(self, prediction_points: np.ndarray):
         # check the size of the data
-        self.check_default_size(prediction_points)
+        if prediction_points.shape[0] != self.size_x:
+            raise ValueError(f"Data must have shape ({self.size_x}, :)")
         # reshape the data
         normalize_training_data = np.reshape(self.training_data.T, (1, self.size_y, self.size_x, 1))
         normalize_training_data = IC_normalization(normalize_training_data)
