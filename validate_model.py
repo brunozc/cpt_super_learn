@@ -5,7 +5,7 @@ from tqdm import tqdm
 from CPTSuperLearn.utils import read_data_file, write_score
 from CPTSuperLearn.environment import CPTEnvironment
 from CPTSuperLearn.agent import DQLAgent
-from CPTSuperLearn.interpolator import InverseDistance
+from CPTSuperLearn.interpolator import InverseDistance, SchemaGANInterpolator
 
 
 def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_folder: str, output_folder: str,
@@ -78,9 +78,8 @@ def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_fol
 
 # Example usage
 if __name__ == "__main__":
-    validation_data_folder = "./data_fabian/validation"
-    actions = [10, 25, 50, 100, 150]  # actions in number of pixel
-    nb_cpts = 4
+    training_data_folder = "/validation"
+    actions = [50, 100, 150]  # actions in number of pixels
     output_folder = "results/validation"
 
     cpt_env = CPTEnvironment(actions,
@@ -88,7 +87,7 @@ if __name__ == "__main__":
                              weight_reward_cpt=0.5,
                              image_width=512,
                              max_first_step=20,
-                             interpolation_method=InverseDistance(nb_points=6)
+                             interpolation_method=SchemaGANInterpolator("schemagan/model_000036.h5")
                              )
 
     cpt_agent = DQLAgent(state_size=6,
@@ -103,4 +102,5 @@ if __name__ == "__main__":
                          nb_steps_update=10,
                          model_path="results/cpt_model.pth")
 
-    evaluate_model(cpt_env, cpt_agent, validation_data_folder, output_folder, nb_cpts, make_plots=False)
+    nb_cpts = 4
+    evaluate_model(cpt_env, cpt_agent, training_data_folder, output_folder, nb_cpts, make_plots=True)

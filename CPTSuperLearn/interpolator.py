@@ -2,6 +2,8 @@ from typing import List
 from abc import ABC, abstractmethod
 import numpy as np
 from scipy.spatial import cKDTree
+from keras.models import load_model
+from utils import IC_normalization, reverse_IC_normalization
 
 
 class InterpolatorAbc(ABC):
@@ -22,6 +24,45 @@ class InterpolatorAbc(ABC):
         Predict the data at the prediction points
         """
         raise NotImplementedError("Predict method must be implemented")
+
+
+class SchemaGANInterpolator(InterpolatorAbc):
+    """
+    Interpolator using SchemaGAN model for interpolation.
+    For more information on SchemaGAN, see https://github.com/fabcamo/schemaGAN.
+
+    """
+
+    def __init__(self, model_path: str):
+        self.model_path = model_path
+        self.model = load_model(model_path)
+        self.size_x = 512
+        self.size_y = 32
+        self.training_points = []
+        self.training_data = []
+        self.prediction = []
+
+    def interpolate(self, training_points: np.ndarray, training_data: np.ndarray):
+        # check the size of the data
+        if training_data.shape[1] != self.size_y:
+            raise ValueError(f"Data must have shape (:, {self.size_y})")
+        # create a zeros array
+        self.training_data = np.zeros((self.size_x, self.size_y))
+        # fill the array with the training data
+        for counter, column in enumerate(training_points):
+            self.training_data[column, :] = training_data[counter, :]
+        self.training_points = training_points
+
+    def predict(self, prediction_points: np.ndarray):
+        # check the size of the data
+        if prediction_points.shape[0] != self.size_x:
+            raise ValueError(f"Data must have shape ({self.size_x}, :)")
+        # reshape the data
+        normalize_training_data = np.reshape(self.training_data.T, (1, self.size_y, self.size_x, 1))
+        normalize_training_data = IC_normalization(normalize_training_data)
+        prediction = self.model.predict(normalize_training_data, verbose=0)
+        prediction = reverse_IC_normalization(np.squeeze(prediction.T))
+        self.prediction = prediction
 
 
 class InverseDistance(InterpolatorAbc):

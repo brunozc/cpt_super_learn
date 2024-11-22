@@ -214,8 +214,8 @@ class CPTEnvironment:
 
         os.makedirs(os.path.dirname(filename), exist_ok=True)
 
-        vmin = 1
-        vmax = 4
+        vmin = 0
+        vmax = 4.5
         fig, ax = plt.subplots(3, 1, figsize=(10, 5), sharex=True, sharey=True)
         ax[0].set_position([0.075, 0.70, 0.775, 0.175])
         ax[1].set_position([0.075, 0.40, 0.775, 0.25])
