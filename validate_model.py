@@ -78,7 +78,7 @@ def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_fol
 
 # Example usage
 if __name__ == "__main__":
-    training_data_folder = "data/val"
+    training_data_folder = "data/vali"
     actions = [50, 100, 150]  # actions in number of pixels
     output_folder = "results/validation"
 
