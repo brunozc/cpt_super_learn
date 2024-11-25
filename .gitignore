@@ -1,9 +1,10 @@
 .vscode/
 venv/
 .python-version
-results*/
 __pycache__/
 *.egg-info/
+results*/
 data/*
+schemaGAN/*
 *.mp4
 *.gif

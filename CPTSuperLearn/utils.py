@@ -4,7 +4,7 @@ import numpy as np
 import numpy as np
 
 MAX_IC_VALUE = 4.5  # Maximum expected IC value
-MIN_IC_VALUE = 0  # Minimum expected IC value, it's not really zero,
+MIN_IC_VALUE = 0  # Minimum expected IC value, it's not really zero
 
 
 def IC_normalization(data: np.ndarray):
@@ -33,8 +33,6 @@ def IC_normalization(data: np.ndarray):
     return src_normalized
 
 
-
-
 def reverse_IC_normalization(data: np.ndarray):
     """
     Reverse the normalization of IC values in the data from [-1 - 1] to [0 - MaxIC].
@@ -45,7 +43,6 @@ def reverse_IC_normalization(data: np.ndarray):
     Returns:
     np.array: An array containing the rescaled data.
     """
-
 
     # Calculate the range of the data
     data_range = MAX_IC_VALUE - MIN_IC_VALUE
