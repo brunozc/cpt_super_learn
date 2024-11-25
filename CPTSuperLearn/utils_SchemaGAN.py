@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 
 MAX_IC_VALUE = 4.5  # Maximum expected IC value
 MIN_IC_VALUE = 0  # Minimum expected IC value, it's not really zero,
