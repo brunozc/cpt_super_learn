@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 from scipy.spatial import cKDTree
 from keras.models import load_model
-from utils import IC_normalization, reverse_IC_normalization
+from CPTSuperLearn.utils_SchemaGAN import IC_normalization, reverse_IC_normalization
 
 
 class InterpolatorAbc(ABC):
