@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-def IC_normalization(data):
+def IC_normalization(data: np.ndarray):
     """
     Normalize IC values in the data from [0 - MaxIC] to [-1 - 1].
 
