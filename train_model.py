@@ -73,7 +73,7 @@ if __name__ == "__main__":
                              weight_reward_cpt=0.5,
                              image_width=512,
                              max_first_step=20,
-                             interpolation_method=SchemaGANInterpolator("schemagan/model_000036.h5"),
+                             interpolation_method=SchemaGANInterpolator("schemaGAN/model_000036.h5"),
                              )
 
     cpt_agent = DQLAgent(state_size=6,
