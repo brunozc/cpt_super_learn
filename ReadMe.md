@@ -8,7 +8,7 @@ of in-situ testing (e.g. Cone Penetration Test) points in a given environment.
 The agent learns to minimize the Root Mean Square Error (RMSE) between the true and predicted data
 while considering the cost of sampling.
 
-![DRL](DRL.png)
+![DRL](static/DRL.png)
 
 
 ## Installation
