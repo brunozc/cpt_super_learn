@@ -78,7 +78,7 @@ def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_fol
 
 # Example usage
 if __name__ == "__main__":
-    training_data_folder = "/validation"
+    training_data_folder = "data/val"
     actions = [50, 100, 150]  # actions in number of pixels
     output_folder = "results/validation"
 
@@ -87,7 +87,7 @@ if __name__ == "__main__":
                              weight_reward_cpt=0.5,
                              image_width=512,
                              max_first_step=20,
-                             interpolation_method=SchemaGANInterpolator("schemagan/model_000036.h5")
+                             interpolation_method=SchemaGANInterpolator("schemaGAN/model_000036.h5")
                              )
 
     cpt_agent = DQLAgent(state_size=6,
