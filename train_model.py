@@ -63,7 +63,7 @@ def main(nb_episodes: int, cpt_env: CPTEnvironment, agent: DQLAgent, training_da
 
 
 if __name__ == "__main__":
-    training_data_folder = "results/train"
+    training_data_folder = "data/train"
     num_episodes = 100
     actions = [50, 100, 150]  # actions in number of pixels
     output_folder = "results"
