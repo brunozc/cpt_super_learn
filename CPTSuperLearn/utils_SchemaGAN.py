@@ -31,7 +31,7 @@ def IC_normalization(data):
 
 
 
-def reverse_IC_normalization(data):
+def reverse_IC_normalization(data: np.ndarray):
     """
     Reverse the normalization of IC values in the data from [-1 - 1] to [0 - MaxIC].
 
