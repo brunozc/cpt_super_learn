@@ -69,7 +69,7 @@ def download_schemaGAN():
 def download_data():
     url = "https://zenodo.org/records/13143431/files/data.zip"
     _download_file(url, "data.zip")
-    _extract_zip("data.zip", "./data")
+    _extract_zip("data.zip", "./")
 
 
 if __name__ == "__main__":
