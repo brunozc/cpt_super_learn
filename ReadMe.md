@@ -98,6 +98,7 @@ CPTSuperLearn
 ├── validate_model.py
 ├── plot_score.py
 ├── plot_validation.py
+├── download_data.py
 ```
 
 * CPTSuperLearn: Contains the core modules for the environment, agent, interpolators, and utilities.
@@ -107,6 +108,7 @@ CPTSuperLearn
 * validate_model.py: Script to evaluate the trained model.
 * plot_score.py: Script to plot the training scores.
 * plot_validation.py: Script to plot the validation results.
+* download_data.py: Script to download the data files and schemaGAN model.
 
 
 ## License
