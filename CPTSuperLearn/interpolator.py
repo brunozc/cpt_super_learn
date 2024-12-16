@@ -30,7 +30,6 @@ class SchemaGANInterpolator(InterpolatorAbc):
     """
     Interpolator using SchemaGAN model for interpolation.
     For more information on SchemaGAN, see https://github.com/fabcamo/schemaGAN.
-
     """
 
     def __init__(self, model_path: str):
