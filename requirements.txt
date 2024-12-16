@@ -1,10 +1,11 @@
 matplotlib==3.10.0
-numpy==1.26.4
+numpy==1.23.5
 scipy==1.14.1
 torch==2.5.1
 torchaudio==2.5.1
 torchvision==0.20.1
 tqdm==4.67.1
-tensorflow==2.17.0
-keras==3.7.0
+tensorflow==2.12.0
+keras==2.12.0
 requests==2.32.3
+tqdm==4.67.1
