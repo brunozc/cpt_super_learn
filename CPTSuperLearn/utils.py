@@ -1,7 +1,10 @@
 import os
 from typing import List, Tuple
+import requests
+import zipfile
 import numpy as np
-import numpy as np
+from tqdm import tqdm
+
 
 MAX_IC_VALUE = 4.5  # Maximum expected IC value
 MIN_IC_VALUE = 0  # Minimum expected IC value, it's not really zero
@@ -145,3 +148,61 @@ def moving_average(data: np.ndarray, window_size: int) -> np.ndarray:
     y = np.convolve(w/w.sum(), s, mode='same')
 
     return y[window_size-1:-window_size+1]
+
+
+def download_file(url: str, file_name: str):
+    """
+    Download a file from a URL and save it to the specified location.
+
+    Parameters:
+    -----------
+    url (str): URL to download the file from
+    file_name (str): Name of the file to save
+    """
+
+    response = requests.get(url, stream=True)
+    response.raise_for_status()
+
+    if os.path.dirname(file_name):
+        os.makedirs(os.path.dirname(file_name), exist_ok=True)
+
+    total_size = int(response.headers.get('content-length', 0))
+    pbar = tqdm(total=total_size, desc=f"Downloading {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
+
+    # Write the content to a file
+    with open(file_name, 'wb') as file:
+        for chunk in response.iter_content(chunk_size=8192):
+            file.write(chunk)
+            pbar.update(8192)
+
+    pbar.close()
+    print(f"Downloaded {file_name} successfully")
+
+
+def extract_zip(data_zip, extract_path):
+    """
+    Extract a ZIP file to the specified location with progress bar.
+
+    Parameters:
+    -----------
+    data_zip (str): Path to the ZIP file
+    extract_path (str): Path to extract the files to
+    """
+    os.makedirs(extract_path, exist_ok=True)
+
+    # Open the ZIP file once
+    with zipfile.ZipFile(data_zip, "r") as zip_ref:
+        # Get list of files to extract
+        file_list = zip_ref.namelist()
+
+        pbar = tqdm(total=len(file_list), desc=f"Extracting {data_zip}", unit="file")
+        # Create progress bar
+        # with tqdm(total=len(file_list), desc=f"Extracting {data_zip}", unit="file") as pbar:
+        for file in file_list:
+            zip_ref.extract(file, extract_path)
+            pbar.update(1)
+
+    print(f"Files extracted to {extract_path}")
+
+    # Clean up
+    os.remove(data_zip)

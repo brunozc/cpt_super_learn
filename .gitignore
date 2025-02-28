@@ -8,3 +8,4 @@ data/*
 schemaGAN/*
 *.mp4
 *.gif
+build/
