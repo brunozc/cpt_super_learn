@@ -1,7 +1,7 @@
 import os
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import random
 import shutil
-import pytest
 import numpy as np
 import torch
 import tensorflow as tf
@@ -101,7 +101,6 @@ def test_inv_dist():
 
     shutil.rmtree(output_folder)
 
-@pytest.mark.skip(reason="SchemaGAN test WIP")
 def test_inv_schemaGAN():
     """
     Test the model with schemaGAN interpolation
