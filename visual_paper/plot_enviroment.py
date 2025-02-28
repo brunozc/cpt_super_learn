@@ -5,7 +5,7 @@ import matplotlib.patches as patches
 # Recreate the image with modifications: flip the rectangle and place the trucks outside with wheels touching the main rectangle
 
 # Create a new figure and axis
-fig, ax = plt.subplots(figsize=(9, 6))
+fig, ax = plt.subplots(figsize=(9, 9))
 ax.set_xlim(0, 17)
 ax.set_ylim(0, 20)
 ax.axis('off')
@@ -34,6 +34,11 @@ ax.add_patch(circle_2b)
 y_vals = np.linspace(5, 10, 100)
 x_vals_1 = 5 + 0.25 * np.sin(8 * np.pi * y_vals)
 x_vals_2 = 10.9 + 0.25 * np.sin(8 * np.pi * y_vals)
+x_vals_1[1:20] = 1 + x_vals_1[1:20]
+x_vals_2[1:20] = 1 + x_vals_2[1:20]
+x_vals_1[20:25] = 1 + x_vals_1[20:25]
+x_vals_1[30:40] = 1 + x_vals_1[30:40]
+x_vals_2[40:60] = 1 + x_vals_2[40:60]
 # add some noise to the x_vals
 x_vals_1 += np.random.normal(0, 0.05, x_vals_1.shape)
 x_vals_2 += np.random.normal(0, 0.05, x_vals_2.shape)
