@@ -15,7 +15,7 @@ while considering the cost of sampling.
 
 ### Prerequisites
 
-- Python 3.12 or higher
+- Python 3.11
 - The data files for training and validation are available on [Zenodo](https://zenodo.org/records/13143431/files/data.zip).
 - If you want to use the data from the schemaGan, you need to download the [schemaGan model](https://zenodo.org/records/13143431/files/schemaGAN.h5).
 - To automatically download the data files and the schemaGan model, run the following script:
