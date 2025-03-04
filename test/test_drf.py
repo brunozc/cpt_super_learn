@@ -58,7 +58,7 @@ def main(nb_episodes: int, cpt_env: CPTEnvironment, agent: DQLAgent, training_da
 
     agent.save_model(output_folder)
     cpt_env.save_environment(output_folder)
-    write_score(range(nb_episodes), total_score, output_folder)
+    write_score(range(nb_episodes), total_score, os.path.join(output_folder, "score.txt"))
 
 
 def test_inv_dist():
@@ -87,7 +87,10 @@ def test_inv_dist():
                          epsilon_decay=0.90,
                          memory_size=10000,
                          batch_size=64,
-                         nb_steps_update=2)
+                         nb_steps_update=2,
+                         hidden_layers=[128, 256, 128],
+                         use_batch_norm=True,
+                         activation='relu')
 
     main(num_episodes, cpt_env, cpt_agent, training_data_folder, output_folder)
 
@@ -142,7 +145,10 @@ def test_inv_schemaGAN():
                          epsilon_decay=0.90,
                          memory_size=10000,
                          batch_size=64,
-                         nb_steps_update=2)
+                         nb_steps_update=2,
+                         hidden_layers=[128, 256, 128],
+                         use_batch_norm=True,
+                         activation='relu')
 
     main(num_episodes, cpt_env, cpt_agent, training_data_folder, output_folder)
 
