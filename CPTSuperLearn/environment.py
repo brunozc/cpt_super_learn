@@ -1,4 +1,5 @@
 import os
+import pickle
 from typing import List, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
@@ -199,6 +200,33 @@ class CPTEnvironment:
         maximum_step (int): maximum step in pixels of the movement
         """
         return np.random.randint(maximum_step)
+
+    def save_environment(self, filepath: str):
+        """
+        Save the environment
+
+        Parameters:
+        -----------
+        :param filepath: file path to save the environment
+        """
+        os.makedirs(filepath, exist_ok=True)
+        with open(os.path.join(filepath, "environment.pkl"), "wb") as f:
+            pickle.dump(self, f)
+
+    @staticmethod
+    def load_environment(env_path: str):
+        """
+        Load the environment
+
+        Parameters:
+        -----------
+        :param env_path: directory to load the environment
+        """
+        if not os.path.isfile(os.path.join(env_path, "environment.pkl")):
+            raise ValueError("Environment does not exist")
+
+        with open(os.path.join(env_path, "environment.pkl"), "rb") as f:
+            return pickle.load(f)
 
     def plot_environment(self, filename: str):
         """

@@ -5,7 +5,6 @@ from tqdm import tqdm
 from CPTSuperLearn.utils import read_data_file, write_score
 from CPTSuperLearn.environment import CPTEnvironment
 from CPTSuperLearn.agent import DQLAgent
-from CPTSuperLearn.interpolator import InverseDistance, SchemaGANInterpolator
 
 
 def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_folder: str, output_folder: str,
@@ -23,9 +22,8 @@ def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_fol
     :param make_plots: make plots
     """
 
-    # Load the saved model
-    agent.load_model()
-    agent.qnetwork_local.eval()  # Set the model to evaluation mode
+    # Set the model to evaluation mode
+    agent.qnetwork_local.eval()
 
     # Test on validation dataset
     validation_scores = []
@@ -79,28 +77,12 @@ def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_fol
 # Example usage
 if __name__ == "__main__":
     training_data_folder = "data/vali"
-    actions = [50, 100, 150]  # actions in number of pixels
-    output_folder = "results/validation"
 
-    cpt_env = CPTEnvironment(actions,
-                             max_nb_cpts=50,
-                             weight_reward_cpt=0.5,
-                             image_width=512,
-                             max_first_step=20,
-                             interpolation_method=SchemaGANInterpolator("schemaGAN/model_000036.h5")
-                             )
+    results_path = "results_2"
+    output_folder = "results_2/validation"
 
-    cpt_agent = DQLAgent(state_size=6,
-                         action_size=len(actions),
-                         learning_rate=1e-4,
-                         gamma=0.99,
-                         epsilon_start=1.,
-                         epsilon_end=0.01,
-                         epsilon_decay=0.995,
-                         memory_size=10000,
-                         batch_size=64,
-                         nb_steps_update=10,
-                         model_path="results/cpt_model.pth")
+    cpt_env = CPTEnvironment.load_environment(results_path)
+    cpt_agent = DQLAgent.load_model(results_path)
 
     nb_cpts = 4
-    evaluate_model(cpt_env, cpt_agent, training_data_folder, output_folder, nb_cpts, make_plots=True)
+    evaluate_model(cpt_env, cpt_agent, training_data_folder, output_folder, nb_cpts, make_plots=False)

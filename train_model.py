@@ -58,22 +58,25 @@ def main(nb_episodes: int, cpt_env: CPTEnvironment, agent: DQLAgent, training_da
         if episode % 10 == 0:
             print(f"Episode {episode} / {nb_episodes} | Average score: {average_score:.2f} Epsilon: {agent.epsilon:.2f}")
 
-    agent.save_model(os.path.join(output_folder, "cpt_model.pth"))
-    write_score(range(nb_episodes), total_score, os.path.join(output_folder, "cpt_score.txt"))
+    # save the model, agent, environment and score
+    cpt_env.save_environment(output_folder)
+    agent.save_model(output_folder)
+    write_score(range(nb_episodes), total_score, os.path.join(output_folder, "score.txt"))
 
 
 if __name__ == "__main__":
     training_data_folder = "data/train"
-    num_episodes = 100
-    actions = [50, 100, 150]  # actions in number of pixels
-    output_folder = "results"
+    num_episodes = 10000
+    actions = [25, 50, 100, 150]  # actions in number of pixels
+    output_folder = "results_1"
 
     cpt_env = CPTEnvironment(actions,
-                             max_nb_cpts=50,
+                             max_nb_cpts=20,
                              weight_reward_cpt=0.5,
                              image_width=512,
-                             max_first_step=20,
-                             interpolation_method=SchemaGANInterpolator("schemaGAN/model_000036.h5"),
+                             max_first_step=1,
+                             interpolation_method=InverseDistance(nb_points=6),
+                            #  interpolation_method=SchemaGANInterpolator("./schemaGAN/schemaGAN.h5"),
                              )
 
     cpt_agent = DQLAgent(state_size=6,
@@ -82,9 +85,12 @@ if __name__ == "__main__":
                          gamma=0.99,
                          epsilon_start=0.95,
                          epsilon_end=0.05,
-                         epsilon_decay=0.995,
+                         epsilon_decay=0.9997,
                          memory_size=10000,
                          batch_size=64,
-                         nb_steps_update=10)
+                         nb_steps_update=10,
+                         hidden_layers=[32, 64, 32],
+                         use_batch_norm=True,
+                         activation='relu')
 
-    main(num_episodes, cpt_env, cpt_agent, training_data_folder, output_folder, make_plots=True)
+    main(num_episodes, cpt_env, cpt_agent, training_data_folder, output_folder, make_plots=False)

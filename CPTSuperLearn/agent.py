@@ -1,4 +1,5 @@
 import os
+import pickle
 from typing import List
 import random
 import numpy as np
@@ -7,11 +8,14 @@ import torch
 from torch import nn
 from torch import optim
 
+# Define the transition
+Transition = namedtuple('Transition', ('state', 'action', 'reward', 'next_state', 'done'))
 
 class DQLAgent:
     def __init__(self, state_size: int, action_size: int, learning_rate: float = 1e-4, gamma: float = 0.99,
                  epsilon_start: float = 1.0, epsilon_end: float = 0.01, epsilon_decay: float = 0.995,
-                 memory_size: int = 10000, batch_size: int = 64, nb_steps_update: int = 10, model_path: str = None):
+                 memory_size: int = 10000, batch_size: int = 64, nb_steps_update: int = 10,
+                 hidden_layers: List[int] = [32, 64, 32], use_batch_norm: bool = True, activation: str = 'relu'):
         """
         Initialize the DQL agent
 
@@ -27,14 +31,16 @@ class DQLAgent:
         :param memory_size: size of the replay buffer
         :param batch_size: batch size
         :param nb_steps_update: number of steps to update target network
-        :param model_path: path to save the model
+        :param hidden_layers: list of hidden layer sizes, default [32, 64, 32]
+        :param use_batch_norm: whether to use batch normalization, default True
+        :param activation: activation function to use, default 'relu'
         """
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # Networks
-        self.qnetwork_local = QNetwork(state_size, action_size).to(self.device)
-        self.qnetwork_target = QNetwork(state_size, action_size).to(self.device)
+        self.qnetwork_local = QNetwork(state_size, action_size, hidden_layers, use_batch_norm, activation).to(self.device)
+        self.qnetwork_target = QNetwork(state_size, action_size, hidden_layers, use_batch_norm, activation).to(self.device)
         self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=learning_rate)
 
         # Replay memory
@@ -48,9 +54,8 @@ class DQLAgent:
         self.epsilon_decay = epsilon_decay
         self.nb_steps_update = nb_steps_update
         self.nb_step = 0
-        self.model_path = model_path
 
-    def save_model(self, path: str):
+    def save_model(self, path_model: str):
         """
         Save the model
 
@@ -59,24 +64,31 @@ class DQLAgent:
         :param path: path to save the model
         """
 
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        self.model_path = path
-        torch.save(self.qnetwork_local.state_dict(), path)
+        os.makedirs(path_model, exist_ok=True)
 
-    def load_model(self):
+        torch.save(self.qnetwork_local.state_dict(), os.path.join(path_model, "model.pth"))
+        with open(os.path.join(path_model, "agent.pkl"), "wb") as f:
+            pickle.dump(self, f)
+
+    @staticmethod
+    def load_model(path_model: str):
         """
         Load the model
 
         Parameters:
         -----------
-        :param path: path to load the model
+        :param path_model: path to load the model and agent
         """
+        if not os.path.isfile(os.path.join(path_model, "model.pth")):
+            raise ValueError("Model does not exist")
+        if not os.path.isfile(os.path.join(path_model, "agent.pkl")):
+            raise ValueError("Agent does not exist")
 
-        if self.model_path is None:
-            raise ValueError("Model has not been saved yet")
+        with open(os.path.join(path_model, "agent.pkl"), "rb") as f:
+            self = pickle.load(f)
 
-        self.qnetwork_local.load_state_dict(torch.load(self.model_path,  weights_only=True))
-
+        self.qnetwork_local.load_state_dict(torch.load(os.path.join(path_model, "model.pth"),  weights_only=True))
+        return self
 
     def get_next_action(self, state: torch.Tensor, training: bool = True) -> int:
         r"""
@@ -162,22 +174,46 @@ class DQLAgent:
 
 
 class QNetwork(nn.Module):
-    def __init__(self, state_size: int, action_size: int):
+    def __init__(self, state_size: int, action_size: int, hidden_layers: List[int],
+                 use_batch_norm: bool = True, activation: str = 'relu'):
+        """
+        Initialize the Q-Network
+
+        Parameters:
+        -----------
+        :param state_size: size of the state input
+        :param action_size: size of the action output
+        :param hidden_layers: list of hidden layer sizes
+        :param use_batch_norm: whether to use batch normalization
+        :param activation: activation function to use ('relu', 'tanh', or 'leaky_relu')
+        """
         super(QNetwork, self).__init__()
 
-        # Improved architecture with batch normalization
-        self.network = nn.Sequential(
-            nn.Linear(state_size, 128),
-            nn.BatchNorm1d(128),
-            nn.ReLU(),
-            nn.Linear(128, 256),
-            nn.BatchNorm1d(256),
-            nn.ReLU(),
-            nn.Linear(256, 128),
-            nn.BatchNorm1d(128),
-            nn.ReLU(),
-            nn.Linear(128, action_size)
-        )
+        # Select activation function
+        if activation.lower() == 'relu':
+            act_fn = nn.ReLU()
+        elif activation.lower() == 'tanh':
+            act_fn = nn.Tanh()
+        elif activation.lower() == 'leaky_relu':
+            act_fn = nn.LeakyReLU(0.01)
+        else:
+            raise ValueError(f"Activation function {activation} not supported")
+
+        # Build network dynamically
+        layers = []
+        input_size = state_size
+
+        for hidden_size in hidden_layers:
+            layers.append(nn.Linear(input_size, hidden_size))
+            if use_batch_norm:
+                layers.append(nn.BatchNorm1d(hidden_size))
+            layers.append(act_fn)
+            input_size = hidden_size
+
+        # Add final output layer
+        layers.append(nn.Linear(input_size, action_size))
+
+        self.network = nn.Sequential(*layers)
 
     def forward(self, state: torch.Tensor) -> torch.Tensor:
         """
@@ -202,8 +238,7 @@ class ReplayBuffer:
         """
 
         self.buffer = deque(maxlen=capacity)
-        self.Transition = namedtuple('Transition',
-                                   ('state', 'action', 'reward', 'next_state', 'done'))
+        self.Transition = Transition
 
     def push(self, *args):
         """

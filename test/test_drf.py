@@ -56,8 +56,9 @@ def main(nb_episodes: int, cpt_env: CPTEnvironment, agent: DQLAgent, training_da
 
         total_score.append(score)
 
-    agent.save_model(os.path.join(output_folder, "cpt_model.pth"))
-    write_score(range(nb_episodes), total_score, os.path.join(output_folder, "cpt_score.txt"))
+    agent.save_model(output_folder)
+    cpt_env.save_environment(output_folder)
+    write_score(range(nb_episodes), total_score, output_folder)
 
 
 def test_inv_dist():
@@ -90,7 +91,13 @@ def test_inv_dist():
 
     main(num_episodes, cpt_env, cpt_agent, training_data_folder, output_folder)
 
-    with open(os.path.join(output_folder, "cpt_score.txt"), "r") as f:
+    # check if files are create
+    assert os.path.isfile(os.path.join(output_folder, "environment.pkl"))
+    assert os.path.isfile(os.path.join(output_folder, "model.pth"))
+    assert os.path.isfile(os.path.join(output_folder, "score.txt"))
+
+    # check the score
+    with open(os.path.join(output_folder, "score.txt"), "r") as f:
         scores = f.read().splitlines()
     scores = [list(map(float, i.split(";"))) for i in scores]
 
@@ -139,7 +146,13 @@ def test_inv_schemaGAN():
 
     main(num_episodes, cpt_env, cpt_agent, training_data_folder, output_folder)
 
-    with open(os.path.join(output_folder, "cpt_score.txt"), "r") as f:
+    # check if files are create
+    assert os.path.isfile(os.path.join(output_folder, "environment.pkl"))
+    assert os.path.isfile(os.path.join(output_folder, "model.pth"))
+    assert os.path.isfile(os.path.join(output_folder, "score.txt"))
+
+    # check the score
+    with open(os.path.join(output_folder, "score.txt"), "r") as f:
         scores = f.read().splitlines()
     scores = [list(map(float, i.split(";"))) for i in scores]
 
