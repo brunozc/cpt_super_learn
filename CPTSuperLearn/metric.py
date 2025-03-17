@@ -107,6 +107,7 @@ class MetricsTracker:
 
         # Control Points Count
         ax[1, 1].plot(self.metrics['episode'], self.metrics['cpt_count_progression'])
+        ax[1, 1].plot(self.metrics['episode'], moving_average(np.array(self.metrics['cpt_count_progression']), 10))
         ax[1, 1].set_title('In-situ tests')
         ax[1, 1].set_xlabel('Episodes')
         ax[1, 1].set_ylabel('Number in-situ tests')
@@ -118,3 +119,14 @@ class MetricsTracker:
         plt.savefig(os.path.join(self.output_folder, 'training_metrics.png'))
         plt.savefig(os.path.join(self.output_folder, 'training_metrics.pdf'))
         plt.close()
+
+    def save_metrics(self):
+        """
+        Save the metrics
+        """
+        with open(os.path.join(self.output_folder, 'metrics.txt'), 'w') as fo:
+            fo.write("Episode, Reward, Epsilon, RMSE, CPT Count, Gradient Norm\n")
+            for i in range(len(self.metrics['episode'])):
+                fo.write(f"{self.metrics['episode'][i]}, {self.metrics['episode_rewards'][i]}, "
+                         f"{self.metrics['epsilon_values'][i]}, {self.metrics['rmse_progression'][i]}, "
+                         f"{self.metrics['cpt_count_progression'][i]}, {self.metrics['gradient_norms'][i]}\n")
