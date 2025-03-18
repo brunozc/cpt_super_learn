@@ -99,7 +99,7 @@ class MetricsTracker:
 
         # Epsilon decay
         ax[1, 0].plot(self.metrics['episode'], self.metrics['epsilon_values'])
-        ax[1, 0].set_title('Exploration rate (Epsilon)')
+        ax[1, 0].set_title('Exploration rate')
         ax[1, 0].set_xlabel('Episodes')
         ax[1, 0].set_ylabel('Epsilon')
         ax[1, 0].set_xlim(0, len(self.metrics['epsilon_values']))
