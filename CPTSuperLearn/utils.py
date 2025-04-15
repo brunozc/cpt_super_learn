@@ -105,7 +105,7 @@ def input_random_data_file(training_data_folder: str) -> Tuple[str, np.ndarray]:
     return file_id, data
 
 
-def write_score(episode: List, total_score: List, output_file: str):
+def write_score(episode: List, total_score: List, total_positions: List,  output_file: str):
     """
     Writes the score to a file
 
@@ -119,8 +119,8 @@ def write_score(episode: List, total_score: List, output_file: str):
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
     with open(output_file, "w") as fo:
-        for ep, score in zip(episode, total_score):
-            fo.write(f"{ep};{score}\n")
+        for ep, score, pos in zip(episode, total_score, total_positions):
+            fo.write(f"{ep};{score};{pos}\n")
 
 
 def moving_average(data: np.ndarray, window_size: int) -> np.ndarray:

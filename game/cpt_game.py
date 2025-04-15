@@ -8,10 +8,13 @@ matplotlib.use('Agg')  # Use Agg backend to avoid conflicts with Pygame
 import matplotlib.pyplot as plt
 from io import BytesIO
 from PIL import Image
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from CPTSuperLearn.environment import CPTEnvironment
 from CPTSuperLearn.agent import DQLAgent
 from CPTSuperLearn.utils import read_data_file
+from CPTSuperLearn.interpolator import SchemaGANInterpolator
 
 
 class CPTGame:
@@ -59,6 +62,8 @@ class CPTGame:
 
         # Load environment and agent
         self.cpt_env = CPTEnvironment.load_environment(model_path)
+        if self.cpt_env.interpolator == "SchemaGANInterpolator" or cpt_env.interpolator is None:
+            self.cpt_env.interpolator = SchemaGANInterpolator("./schemaGAN/schemaGAN.h5")
         self.agent = DQLAgent.load_model(model_path)
 
         # Load validation data
@@ -493,8 +498,8 @@ class CPTGame:
 
 
 if __name__ == "__main__":
-    validation_data_folder = "data/vali"
-    model_path = "results_2"  # Path to the trained model
+    validation_data_folder = "data/validation"
+    model_path = "results_4"  # Path to the trained model
 
     game = CPTGame(validation_data_folder, model_path)
     game.run()

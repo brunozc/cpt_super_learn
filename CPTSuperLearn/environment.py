@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import torch
 
-from CPTSuperLearn.interpolator import InterpolatorAbc
+from CPTSuperLearn.interpolator import InterpolatorAbc, SchemaGANInterpolator
 
 
 class CPTEnvironment:
@@ -210,6 +210,10 @@ class CPTEnvironment:
         :param filepath: file path to save the environment
         """
         os.makedirs(filepath, exist_ok=True)
+        # if the interpolator is SchemaGAN then do not save it with the environment
+        if isinstance(self.interpolator, SchemaGANInterpolator):
+            self.interpolator = "SchemaGANInterpolator"
+
         with open(os.path.join(filepath, "environment.pkl"), "wb") as f:
             pickle.dump(self, f)
 

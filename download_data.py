@@ -19,4 +19,4 @@ def download_data():
 
 if __name__ == "__main__":
     download_schemaGAN()
-    download_data()
+    #download_data()
