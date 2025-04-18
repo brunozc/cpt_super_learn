@@ -102,7 +102,7 @@ class DQLAgent:
         """
         # if training
         if training and np.random.random() < self.epsilon:
-            return np.random.randint(0, self.qnetwork_local.network[-1].out_features - 1)
+            return np.random.randint(0, self.qnetwork_local.network[-1].out_features)
         else:
             self.qnetwork_local.eval()
             with torch.no_grad():

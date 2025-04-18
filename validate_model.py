@@ -53,6 +53,7 @@ def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_fol
 
         # compute the RMSE and make plot for the uniform distribution
         # the number of CPT remains the same
+        # nb_cpts = len(cpt_env.sampled_positions)
         idx_cpts = np.linspace(0, cpt_env.image_width - 1, nb_cpts, dtype=int)
 
         cpts = [image_data[image_data[:, 0] == i, 2] for i in idx_cpts]
@@ -78,8 +79,8 @@ def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_fol
 if __name__ == "__main__":
     training_data_folder = "data/vali"
 
-    results_path = "results_2"
-    output_folder = "results_2/validation"
+    results_path = "results"
+    output_folder = os.path.join(results_path, "validation")
 
     cpt_env = CPTEnvironment.load_environment(results_path)
     cpt_agent = DQLAgent.load_model(results_path)
