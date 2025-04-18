@@ -2,9 +2,9 @@ import os
 import numpy as np
 import matplotlib.pylab as plt
 
-path_to_results = "results/validation/"
+path_to_results =  "results"
 
-with open(os.path.join(path_to_results, "validation_rmse.txt"), "r") as fi:
+with open(os.path.join(path_to_results, "validation/validation_rmse.txt"), "r") as fi:
     data = fi.read().splitlines()
 
 data = [dat.split(";") for dat in data]

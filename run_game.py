@@ -4,9 +4,9 @@ from game.cpt_game import CPTGame
 
 def main():
     parser = argparse.ArgumentParser(description='CPT Digital Twin Game')
-    parser.add_argument('--data', type=str, default='data/validation',
+    parser.add_argument('--data', type=str, default='data/vali',
                         help='Path to validation data folder')
-    parser.add_argument('--model', type=str, default='results_4',
+    parser.add_argument('--model', type=str, default='results',
                         help='Path to trained model folder')
     parser.add_argument('--width', type=int, default=1200,
                         help='Game window width')

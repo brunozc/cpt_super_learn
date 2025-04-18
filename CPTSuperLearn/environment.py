@@ -1,17 +1,17 @@
 import os
 import pickle
-from typing import List, Tuple
+from typing import List, Tuple, Union
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import torch
 
-from CPTSuperLearn.interpolator import InterpolatorAbc, SchemaGANInterpolator
+from CPTSuperLearn.interpolator import SchemaGANInterpolator, InverseDistance
 
 
 class CPTEnvironment:
     def __init__(self, action_list: List[int], max_nb_cpts: int, weight_reward_cpt: float, image_width: int,
-                 max_first_step: int, interpolation_method: InterpolatorAbc):
+                 max_first_step: int, interpolation_method: Union[SchemaGANInterpolator, InverseDistance]):
         """
         Initialize the CPT environment
 
@@ -30,14 +30,14 @@ class CPTEnvironment:
         self.alpha = weight_reward_cpt
         self.image_width = image_width
         self.maximum_first_step = max_first_step
-        self.initial_step = None
+        self.initial_step = True
         self.initial_rmse = None
 
         # check if alpha between 0 and 1
         if self.alpha < 0 or self.alpha > 1:
             raise ValueError("Weight_reward_cpt must be between 0 and 1")
 
-        self.reward_out_of_bounds = 0
+        self.reward_out_of_bounds = -10.  # Stronger penalty for out-of-bounds
 
         self.interpolator = interpolation_method
 
@@ -187,7 +187,6 @@ class CPTEnvironment:
         normalized_cpt = len(self.sampled_positions) / self.max_nb_cpts
         reward = -(self.alpha * normalized_rmse + beta * normalized_cpt)
 
-
         return reward
 
     @staticmethod
@@ -210,10 +209,6 @@ class CPTEnvironment:
         :param filepath: file path to save the environment
         """
         os.makedirs(filepath, exist_ok=True)
-        # if the interpolator is SchemaGAN then do not save it with the environment
-        if isinstance(self.interpolator, SchemaGANInterpolator):
-            self.interpolator = "SchemaGANInterpolator"
-
         with open(os.path.join(filepath, "environment.pkl"), "wb") as f:
             pickle.dump(self, f)
 
