@@ -87,25 +87,21 @@ CPTSuperLearn
 │   ├── agent.py
 │   ├── environment.py
 │   ├── interpolator.py
-│   ├── metric.py
 │   └── utils.py
-├── game
-│   ├── __init__.py
-│   └── cpt_game.py
 ├── train_model.py
 ├── validate_model.py
+├── plot_score.py
 ├── plot_validation.py
-├── run_game.py
 ├── download_data.py
-└── setup.cfg
 ```
 
-* CPTSuperLearn: Contains the core modules for the environment, agent, interpolators, metrics, and utilities.
-* game: Contains the implementation of the CPT game environment.
+* CPTSuperLearn: Contains the core modules for the environment, agent, interpolators, and utilities.
+* data: Contains the data files for training and validation.
+* results: Contains the output results from training and validation.
 * train_model.py: Script to train the DQL agent.
 * validate_model.py: Script to evaluate the trained model.
+* plot_score.py: Script to plot the training scores.
 * plot_validation.py: Script to plot the validation results.
-* run_game.py: Script to run the CPT game.
 * download_data.py: Script to download the data files and schemaGAN model.
 
 
