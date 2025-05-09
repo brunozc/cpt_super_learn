@@ -3,6 +3,8 @@ from typing import List, Tuple
 import requests
 import zipfile
 import numpy as np
+import yaml
+from schema import Schema, And, Or, SchemaError
 from tqdm import tqdm
 
 
@@ -206,3 +208,79 @@ def extract_zip(data_zip, extract_path):
 
     # Clean up
     os.remove(data_zip)
+
+def load_yaml_config(config_path):
+    """
+    Load configuration from YAML file
+
+    Parameters
+    ----------
+    :param config_path: Path to the configuration file
+    :return: Configuration dictionary
+    """
+
+    if not validate_yaml(config_path):
+        raise ValueError(f"Invalid YAML file: {config_path}")
+
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+    return config
+
+
+def validate_yaml(config_path):
+    """
+    Validate the YAML configuration file using schema validation.
+    Parameters
+    ----------
+    :param config_path: Path to the configuration file
+    :return: True if valid, False otherwise
+    """
+    with open(config_path, 'r') as file:
+        config = yaml.safe_load(file)
+
+    schema = Schema({
+        'seed': And(int, lambda n: n >= 0),
+        'data': {
+            'train_folder': And(str, len),
+            'validation_folder': And(str, len)
+        },
+        'environment': {
+            'actions': [int],
+            'max_nb_cpts': And(int, lambda n: n > 0),
+            'weight_reward_cpt': And(float, lambda n: 0 <= n <= 1),
+            'image_width': And(int, lambda n: n > 0),
+            'max_first_step': And(int, lambda n: n >= 0),
+            'interpolation_method': Or("SchemaGAN", "InverseDistance"),
+            'interpolation_method_params': Or(str, int)  # Allow str path or int
+        },
+        'agent': {
+            'state_size': And(int, lambda n: n > 0),
+            'learning_rate': And(float, lambda n: 0 < n < 1),
+            'gamma': And(float, lambda n: 0 <= n <= 1),
+            'epsilon_start': And(float, lambda n: 0 <= n <= 1),
+            'epsilon_end': And(float, lambda n: 0 <= n <= 1),
+            'epsilon_decay': And(float, lambda n: 0 <= n <= 1),
+            'memory_size': And(int, lambda n: n > 0),
+            'batch_size': And(int, lambda n: n > 0),
+            'nb_steps_update': And(int, lambda n: n > 0),
+            'hidden_layers': [int],
+            'use_batch_norm': bool,
+            'activation': Or("relu", "tanh", "sigmoid")
+        },
+        'training': {
+            'nb_episodes': And(int, lambda n: n > 0),
+            'make_plots': bool,
+            'output_folder': And(str, len),
+            'log_interval': And(int, lambda n: n >= 0)
+        },
+        'validation': {
+            'make_plots': bool,
+            'output_folder': And(str, len)
+        }
+    })
+
+    try:
+        schema.validate(config)
+        return True
+    except SchemaError as e:
+        return False

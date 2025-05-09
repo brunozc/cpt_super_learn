@@ -38,6 +38,7 @@ ax.set_ylim(bottom=0)
 ax.grid()
 # Show the plot
 plt.savefig(os.path.join(path_to_results, "rmse_comparison.png"))
+plt.savefig(os.path.join(path_to_results, "rmse_comparison.pdf"))
 plt.close()
 
 

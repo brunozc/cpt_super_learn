@@ -8,17 +8,15 @@ matplotlib.use('Agg')  # Use Agg backend to avoid conflicts with Pygame
 import matplotlib.pyplot as plt
 from io import BytesIO
 from PIL import Image
-import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-
 from CPTSuperLearn.environment import CPTEnvironment
 from CPTSuperLearn.agent import DQLAgent
 from CPTSuperLearn.utils import read_data_file
-from CPTSuperLearn.interpolator import SchemaGANInterpolator
 
 
 class CPTGame:
-    """Interactive digital twin for CPT sampling strategy"""
+    """
+    Interactive digital twin for CPT sampling strategy
+    """
 
     def __init__(self, validation_data_folder, model_path, screen_width=1200, screen_height=800):
         """
@@ -46,24 +44,12 @@ class CPTGame:
         # Start screen state
         self.in_start_screen = True
 
-        # Load or create truck image
-        try:
-            truck_path = os.path.join(os.path.dirname(__file__), "assets", "cpt_truck.png")
-            if os.path.exists(truck_path):
-                self.truck_img = pygame.image.load(truck_path)
-            else:
-                # Create a simple truck if image doesn't exist
-                self.truck_img = self._create_simple_truck(50, 30)
-        except:
-            # Fallback to simple truck if there's any loading issue
-            self.truck_img = self._create_simple_truck(50, 30)
-
+        # create truck image
+        self.truck_img = self._create_simple_truck(50, 30)
         self.truck_img = pygame.transform.scale(self.truck_img, (50, 30))
 
         # Load environment and agent
         self.cpt_env = CPTEnvironment.load_environment(model_path)
-        if self.cpt_env.interpolator == "SchemaGANInterpolator" or cpt_env.interpolator is None:
-            self.cpt_env.interpolator = SchemaGANInterpolator("./schemaGAN/schemaGAN.h5")
         self.agent = DQLAgent.load_model(model_path)
 
         # Load validation data
@@ -495,11 +481,3 @@ class CPTGame:
 
         pygame.quit()
         sys.exit()
-
-
-if __name__ == "__main__":
-    validation_data_folder = "data/validation"
-    model_path = "results_4"  # Path to the trained model
-
-    game = CPTGame(validation_data_folder, model_path)
-    game.run()
