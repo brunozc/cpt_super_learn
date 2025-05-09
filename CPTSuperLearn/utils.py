@@ -265,7 +265,7 @@ def validate_yaml(config_path):
             'nb_steps_update': And(int, lambda n: n > 0),
             'hidden_layers': [int],
             'use_batch_norm': bool,
-            'activation': Or("relu", "tanh", "sigmoid", str)  # extend as needed
+            'activation': Or("relu", "tanh", "sigmoid")
         },
         'training': {
             'nb_episodes': And(int, lambda n: n > 0),
