@@ -83,6 +83,7 @@ def main(config_path: str):
 
     train(data_config, training_config, cpt_env, cpt_agent)
 
+
 def train(config_data: dict, config_training: dict, cpt_env: dict, agent: dict):
     """
     Train the DRL model
@@ -136,6 +137,7 @@ def train(config_data: dict, config_training: dict, cpt_env: dict, agent: dict):
     agent.save_model(output_folder)
     metrics.visualize_metrics()
     metrics.save_metrics()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train the CPTSuperLearn model.")

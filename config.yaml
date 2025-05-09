@@ -13,8 +13,8 @@ environment:
   weight_reward_cpt: 0.6
   image_width: 512
   max_first_step: 1
-  interpolation_method: "SchemaGAN"  # Options: "SchemaGAN", "InverseDistance"
-  interpolation_method_params: "./schemaGAN/schemaGAN.h5"  # Path to the SchemaGAN model or number of points for InverseDistance
+  interpolation_method: "InverseDistance"  # Options: "SchemaGAN", "InverseDistance"
+  interpolation_method_params: 6  # Path to the SchemaGAN model or number of points for InverseDistance
 
 # Agent settings
 agent:
@@ -41,4 +41,4 @@ training:
 # Validation settings
 validation:
   make_plots: false
-  output_folder: "validation"
+  output_folder: "results/validation"
