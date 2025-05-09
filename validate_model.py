@@ -8,7 +8,7 @@ from CPTSuperLearn.agent import DQLAgent
 
 
 def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_folder: str, output_folder: str,
-                   nb_cpts: int, make_plots=False):
+                   make_plots=False):
     """
     Evaluate the model on the validation dataset
 
@@ -18,7 +18,6 @@ def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_fol
     :param agent: DQL agent
     :param validation_data_folder: folder with the validation data
     :param output_folder: output folder
-    :param nb_cpts: number of CPTs for the uniform distribution
     :param make_plots: make plots
     """
 
@@ -53,7 +52,7 @@ def evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_fol
 
         # compute the RMSE and make plot for the uniform distribution
         # the number of CPT remains the same
-        # nb_cpts = len(cpt_env.sampled_positions)
+        nb_cpts = len(cpt_env.sampled_positions)
         idx_cpts = np.linspace(0, cpt_env.image_width - 1, nb_cpts, dtype=int)
 
         cpts = [image_data[image_data[:, 0] == i, 2] for i in idx_cpts]
@@ -85,5 +84,4 @@ if __name__ == "__main__":
     cpt_env = CPTEnvironment.load_environment(results_path)
     cpt_agent = DQLAgent.load_model(results_path)
 
-    nb_cpts = 4
-    evaluate_model(cpt_env, cpt_agent, training_data_folder, output_folder, nb_cpts, make_plots=False)
+    evaluate_model(cpt_env, cpt_agent, training_data_folder, output_folder, make_plots=False)
