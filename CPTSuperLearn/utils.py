@@ -209,7 +209,7 @@ def extract_zip(data_zip, extract_path):
     # Clean up
     os.remove(data_zip)
 
-def load_config(config_path):
+def load_yaml_config(config_path):
     """
     Load configuration from YAML file
 

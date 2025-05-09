@@ -13,8 +13,8 @@ environment:
   weight_reward_cpt: 0.6
   image_width: 512
   max_first_step: 1
-  interpolation_method: "InverseDistance"  # Options: "SchemaGAN", "InverseDistance"
-  interpolation_method_params: 6  # Path to the SchemaGAN model or number of points for InverseDistance
+  interpolation_method: "SchemaGAN"  # Options: "SchemaGAN", "InverseDistance"
+  interpolation_method_params: "schemaGAN/schemaGAN.h5"  # Path to the SchemaGAN model or number of points for InverseDistance
 
 # Agent settings
 agent:
@@ -23,7 +23,7 @@ agent:
   gamma: 0.99
   epsilon_start: 0.95
   epsilon_end: 0.05
-  epsilon_decay: 0.9996
+  epsilon_decay: 0.99996
   memory_size: 10000
   batch_size: 64
   nb_steps_update: 100
@@ -33,7 +33,7 @@ agent:
 
 # Training settings
 training:
-  nb_episodes: 200
+  nb_episodes: 100000
   make_plots: false
   output_folder: "results"
   log_interval: 10
