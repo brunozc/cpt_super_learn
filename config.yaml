@@ -1,0 +1,44 @@
+# CPTSuperLearn Configuration
+
+# general settings
+seed: 14
+data:
+  train_folder: "data/train"
+  validation_folder: "data/vali"
+
+# Environment settings
+environment:
+  actions: [25, 50, 100, 150]  # Action values
+  max_nb_cpts: 20
+  weight_reward_cpt: 0.6
+  image_width: 512
+  max_first_step: 1
+  interpolation_method: "SchemaGAN"  # Options: "SchemaGAN", "InverseDistance"
+  interpolation_method_params: "./schemaGAN/schemaGAN.h5"  # Path to the SchemaGAN model or number of points for InverseDistance
+
+# Agent settings
+agent:
+  state_size: 6
+  learning_rate: 0.0001
+  gamma: 0.99
+  epsilon_start: 0.95
+  epsilon_end: 0.05
+  epsilon_decay: 0.9996
+  memory_size: 10000
+  batch_size: 64
+  nb_steps_update: 100
+  hidden_layers: [32, 64, 64, 32]
+  use_batch_norm: true
+  activation: "relu"
+
+# Training settings
+training:
+  nb_episodes: 200
+  make_plots: false
+  output_folder: "results"
+  log_interval: 10
+
+# Validation settings
+validation:
+  make_plots: false
+  output_folder: "validation"

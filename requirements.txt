@@ -9,5 +9,6 @@ tensorflow==2.12.0
 keras==2.12.0
 requests==2.32.3
 tqdm==4.67.1
+pyaml-25.1.0
 pytest==8.3.4
 pytest-cov==6.0.0
