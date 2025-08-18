@@ -241,12 +241,17 @@ class CPTEnvironment:
 
         os.makedirs(os.path.dirname(filename), exist_ok=True)
 
-        vmin = 0
-        vmax = 4.5
-        fig, ax = plt.subplots(3, 1, figsize=(10, 5), sharex=True, sharey=True)
-        ax[0].set_position([0.075, 0.70, 0.775, 0.175])
-        ax[1].set_position([0.075, 0.40, 0.775, 0.25])
-        ax[2].set_position([0.075, 0.10, 0.775, 0.25])
+        vmin = 1.3
+        vmax = 3.6
+
+        vmin_error = 0
+        vmax_error = 1
+
+        fig, ax = plt.subplots(4, 1, figsize=(10, 7), sharex=True, sharey=True)
+        ax[0].set_position([0.075, 0.70, 0.775, 0.125])
+        ax[1].set_position([0.075, 0.50, 0.775, 0.175])
+        ax[2].set_position([0.075, 0.30, 0.775, 0.175])
+        ax[3].set_position([0.075, 0.10, 0.775, 0.175])
 
         all_x = np.unique(self.current_image[:, 0])
         all_y = np.unique(self.current_image[:, 1])
@@ -264,15 +269,23 @@ class CPTEnvironment:
                      extent=[0, np.max(x), np.max(y), 0])#, aspect="auto")
         ax[2].invert_yaxis()
 
+        ax[3].imshow(np.abs(self.true_data.T - self.predicted_data.T), vmin=vmin_error, vmax=vmax_error, cmap="viridis",
+                     extent=[0, np.max(x), np.max(y), 0])#, aspect="auto")
+        ax[3].invert_yaxis()
+
+
         ax[0].grid()
         ax[1].grid()
         ax[2].grid()
+        ax[3].grid()
         ax[0].xaxis.set_ticklabels([])
         ax[1].xaxis.set_ticklabels([])
-        ax[2].set_xlabel("Distance [m]")
+        ax[2].xaxis.set_ticklabels([])
+        ax[3].set_xlabel("Distance [m]")
         ax[0].set_ylabel("Known")
         ax[1].set_ylabel("Interpolation")
         ax[2].set_ylabel("True")
+        ax[3].set_ylabel("Error")
         ax[0].set_xlim([0, np.max(all_x)])
 
         # add RMSE
@@ -283,5 +296,12 @@ class CPTEnvironment:
         norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
         cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap="viridis"), ax=ax, cax=cax)
         cbar.set_label("IC")
+
+        cax2 = ax[3].inset_axes([1.05, -0.75, 0.05, 2.5])
+        norm = mpl.colors.Normalize(vmin=vmin_error, vmax=vmax_error)
+        cbar2 = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap="viridis"), ax=ax, cax=cax2)
+        cbar2.set_label("|Absolute Error|")
+
         plt.savefig(f"{filename}.png", dpi=600)
+        plt.savefig(f"{filename}.pdf")
         plt.close()

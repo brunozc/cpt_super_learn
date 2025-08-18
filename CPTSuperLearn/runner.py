@@ -1,6 +1,7 @@
 import os
 import random
 import numpy as np
+import numpy.typing as npt
 import torch
 from tqdm import tqdm
 
@@ -172,8 +173,8 @@ def __evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_f
     agent.qnetwork_local.eval()
 
     # Test on validation dataset
-    validation_scores = []
-    rmse_scores = []
+    validation_scores = ["Score"]
+    metrics_scores = ["RMSE;RMSE_uniform;Bias;Bias_uniform;PIA;PIA_uniform"]
 
     val_files = os.listdir(validation_data_folder)
 
@@ -194,6 +195,8 @@ def __evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_f
         # compute the RMSE and make plot for the DRL model
         validation_scores.append(score)
         rmse = np.sqrt(np.mean((cpt_env.true_data - cpt_env.predicted_data) ** 2))
+        bias = np.mean(cpt_env.true_data - cpt_env.predicted_data)
+        pia = __compute_prediction_interval_coverage(cpt_env.true_data, cpt_env.predicted_data, 0.25)
         if make_plots:
             cpt_env.plot_environment(os.path.join(output_folder, "images", f"file_{file_name}"))
 
@@ -207,6 +210,8 @@ def __evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_f
         interpolator.interpolate(idx_cpts, np.array(cpts))
         interpolator.predict(np.arange(cpt_env.image_width))
         rmse_2 = np.sqrt(np.mean((cpt_env.true_data - interpolator.prediction) ** 2))
+        bias_2 = np.mean(cpt_env.true_data - interpolator.prediction)
+        pia2 = __compute_prediction_interval_coverage(cpt_env.true_data, interpolator.prediction, 0.25)
         if make_plots:
             cpt_env.sampled_positions = idx_cpts
             cpt_env.sampled_values = cpts
@@ -214,8 +219,34 @@ def __evaluate_model(cpt_env: CPTEnvironment, agent: DQLAgent, validation_data_f
             cpt_env.plot_environment(os.path.join(output_folder, "images", f"file_{file_name}_uniform"))
 
         # combine RMSEs
-        rmse_scores.append(";".join([str(rmse), str(rmse_2)]))
+        metrics_scores.append(";".join([str(rmse), str(rmse_2), str(bias), str(bias_2), str(pia), str(pia2)]))
 
     val_files = [os.path.splitext(os.path.basename(f))[0] for f in val_files]
     write_score(val_files, validation_scores, os.path.join(output_folder, "validation_score.txt"))
-    write_score(val_files, rmse_scores, os.path.join(output_folder, "validation_rmse.txt"))
+    write_score(val_files, metrics_scores, os.path.join(output_folder, "validation_metrics.txt"))
+
+
+def __compute_prediction_interval_coverage(true_image: npt.NDArray[np.float64],
+                                           reconstructed_image: npt.NDArray[np.float64],
+                                           uncertainty: float) -> float:
+    """
+    Computes prediction interval coverage assuming a known noise standard deviation
+    for the true data.
+
+    Parameters
+    ----------
+    :param true_image: The true image data (ground truth).
+    :param reconstructed_image: The reconstructed image data (predictions).
+    :param uncertainty: The uncertainty of the predictions.
+
+    Returns
+    -------
+    :return: Coverage proportion of the prediction intervals.
+    """
+
+    lower_bound = reconstructed_image - uncertainty
+    upper_bound = reconstructed_image + uncertainty
+
+    coverage = np.mean((true_image >= lower_bound) & (true_image <= upper_bound))
+
+    return coverage
