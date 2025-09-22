@@ -1,3 +1,5 @@
+[![DOI](https://img.shields.io/badge/DOI-10.1016/j.geoai.2025.100038-blue)](https://doi.org/10.1016/j.geoai.2025.100038)
+
 # CPTSuperLearn
 
 ## Objective
@@ -7,6 +9,9 @@ The objective of this project is to train and evaluate a Deep Q-Learning (DQL) a
 of in-situ testing (e.g. Cone Penetration Test) points in a given environment.
 The agent learns to minimize the Root Mean Square Error (RMSE) between the true and predicted data
 while considering the cost of sampling.
+
+The description of the methodology and results can be found in this
+[paper](https://www.sciencedirect.com/science/article/pii/S3050483X25000371).
 
 ![DRL](static/DRL.png)
 
