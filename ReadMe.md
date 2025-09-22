@@ -171,6 +171,21 @@ CPTSuperLearn
 * download_data.py: Script to download the data files and schemaGAN model.
 
 
+## Citation
+To cite this work, please use the following reference:
+
+```bibtex
+@article{DRL_2025,
+  author={Zuada Coelho, B. and Smyrniou, E. and Campos Montero, F.A.},
+  title={Optimizing geotechnical in-situ site investigations using Deep Reinforcement Learning},
+  ISSN={3050483X},
+  DOI={10.1016/j.geoai.2025.100038},
+  journal={Geodata and AI},
+  year={2025},
+  pages={100038}
+}
+```
+
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
